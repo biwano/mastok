@@ -1,0 +1,5 @@
+venv
+config/config.ini
+__pycache__
+*/__pycache__
+*egg-info
