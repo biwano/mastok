@@ -1,9 +1,16 @@
+""" part of the API managing warehouses """
+import uuid 
 import hug
 from model import Session, Warehouse
-import uuid 
+from . import helpers
 
 
-@hug.post('/')
+@hug.extend_api()
+def shared():
+    """ Adds common directives """
+    return [helpers.extend]
+
+@hug.post('/', requires=helpers.authentication.is_authenticated)
 def create_warehouse():
     """Creates a warehouse"""
     with Session() as session:

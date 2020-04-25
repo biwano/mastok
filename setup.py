@@ -11,6 +11,7 @@ setup(name='mastok',
           'hug',
           'SQLAlchemy',
           'SQLAlchemy-serializer',
+          'alembic'
       ],
 #      packages=['funniest'],
 
