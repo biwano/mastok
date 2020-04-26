@@ -5,9 +5,15 @@ import json
 
 def dictparser(string):
 	return json.loads(string)
-	
-parent = pathlib.Path(__file__).parent
-config = configparser.ConfigParser(converters={
+
+PARENT = pathlib.Path(__file__).parent
+CONFIG = configparser.ConfigParser(converters={
   "dict": dictparser
 })
-config.read_file(open(parent / "config.ini"))
+CONFIG.read_file(open(PARENT / "config.ini"))
+
+def get(*args, **xargs):
+	return CONFIG.get(*args, **xargs)
+
+def getdict(*args, **xargs):
+	return CONFIG.getdict(*args, **xargs)

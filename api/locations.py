@@ -12,11 +12,9 @@ def shared():
 
 @hug.post('/', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def create_location():
+def create_location(session: helpers.extend.session):
     """Creates a warehouse"""
-    with Session() as session:
-        location = Location(uuid=uuid.uuid1().hex)
-        session.add(location)
-
-    return location.to_dict()
+    location = Location(uuid=uuid.uuid1().hex)
+    session.add(location)
+    return location
     

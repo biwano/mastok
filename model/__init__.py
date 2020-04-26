@@ -2,8 +2,9 @@ import traceback
 from contextlib import contextmanager
 from sqlalchemy import create_engine, Column, String, Integer, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
-from config import config
-from .model import BASE, User, Warehouse, Location
+import config
+from .model import BASE, User, Warehouse, Warehouse_ACE, Location
+from . import queries
 
 ENGINE = create_engine(config.get("sqlalchemy", "url"), echo=True)
 SESSION = sessionmaker(bind=ENGINE)
@@ -21,5 +22,3 @@ def Session():
     finally:
         session.close()
 
-
-#BASE.metadata.create_all(ENGINE)

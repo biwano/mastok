@@ -1,7 +1,7 @@
 import hug
 from . import warehouses
 from . import locations
-from . import accounts
+from . import users
 from model import SESSION
 
 
@@ -14,6 +14,6 @@ def warehouse_api():
 def locations_api():
     return [locations]
 
-@hug.extend_api('/accounts')
-def accounts_api():
-    return [accounts]
+@hug.extend_api('/users')
+def users_api():
+    return [users]
