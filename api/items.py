@@ -17,10 +17,8 @@ def shared():
 def create_item(session: helpers.extend.session, user: hug.directives.user, response, location_id, reference_id, quantity):
     """Creates a location"""
     try:
-        location = queries.user_location(session, user, location_id)
-        print(location)
-        reference = queries.user_reference(session, user, reference_id)
-        print(reference)
+        location = queries.user_location(session, user, location_id).one()
+        reference = queries.user_reference(session, user, reference_id).one()
         if location.warehouse.id != reference.warehouse.id:
         	return helpers.response.error("bad_location_and_or_reference", falcon.HTTP_400)
         item = Item(location=location, reference=reference, quantity=quantity)
@@ -28,4 +26,28 @@ def create_item(session: helpers.extend.session, user: hug.directives.user, resp
     except NoResultFound:
         return helpers.response.error("location_and_or_reference_not_found", falcon.HTTP_401)
     
+@hug.get('/{id}', requires=helpers.authentication.is_authenticated)
+@helpers.wraps
+def get_reference(session: helpers.extend.session, user: hug.directives.user, response, id: int):
+    """Gets a item"""
+    return helpers.get("reference", session, queries.user_item(session, user, id))
 
+@hug.put('/{id}', requires=helpers.authentication.is_authenticated)
+@helpers.wraps
+def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, name):
+    """Updates a item"""
+    return helpers.update("item", session, queries.user_item(session, user, id), {"name": name})
+
+@hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
+@helpers.wraps
+def delete_item(session: helpers.extend.session, user: hug.directives.user, response, id: int):
+    """Deletes a item"""
+    return helpers.delete("item", session, queries.user_item(session, user, id))
+
+@hug.get('', requires=helpers.authentication.is_authenticated)
+@helpers.wraps
+def list_items(session: helpers.extend.session, user: hug.directives.user, response, location_id: int):
+    """ Lists warehouse items """
+    return helpers.do_in_location("item",
+    	queries.user_location(session, user, location_id),
+    	lambda location: session.query(Item).filter(location=location))

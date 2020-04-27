@@ -24,38 +24,24 @@ def create_warehouse(session: helpers.extend.session, user: hug.directives.user,
 @hug.get('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def get_warehouse(session: helpers.extend.session, user: hug.directives.user, response, id: int):
-    """Deletes a location"""
-    try:
-        warehouse = queries.user_warehouse(session, user, id)
-        return warehouse
-    except NoResultFound:
-        return helpers.response.error("warehouse_not_found", falcon.HTTP_401)  
+    """Gets a warehouse"""
+    return helpers.get("warehouse", session, queries.user_warehouse(session, user, id))
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def update_warehouse(session: helpers.extend.session, user: hug.directives.user, response, id: int, name):
-    """Deletes a location"""
-    try:
-        warehouse = queries.user_warehouse(session, user, id)
-        warehouse.name = name
-        return warehouse
-    except NoResultFound:
-        return helpers.response.error("warehouse_not_found", falcon.HTTP_401)  
+    """Updates a warehouse"""
+    return helpers.update("warehouse", session, queries.user_warehouse(session, user, id), {"name": name})
+
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def delete_warehouse(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a warehouse"""
-    try:
-        warehouse = queries.user_warehouse(session, user, id)
-        session.delete(warehouse)
-        return helpers.response.ok("warehouse_deleted")
-    except NoResultFound:
-        return helpers.response.error("warehouse_not_found", falcon.HTTP_401)
+    return helpers.delete("warehouse", session, queries.user_warehouse(session, user, id))
 
 @hug.get('/', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def list_warehouses(session: helpers.extend.session, user: hug.directives.user, response):
     """ Lists user warehouses """
-    warehouses = queries.user_warehouses(session, user).all()
-    return warehouses
+    return queries.user_warehouses(session, user).all()
