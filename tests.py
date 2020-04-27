@@ -29,13 +29,24 @@ def headers(user=None):
 		"X-API-KEY": user["api_key"] if user is not None else "bad api key"
 	}
 
+def debug(response):
+    if debug_:
+        print(response.data)
+        print("\n")
+
+def test_value(account, model, id, field, value):
+    url = '/%s/%s' % (model, id)
+    print("Testing %s[%s].%s = %s (%s)" % (model, id, field, value, url))
+    response = hug.test.get(mastok, url, headers=headers(account))
+    debug(response)
+    assert response.data[field] == value
+
 def test():
     def decorator(function):
         def wrapper(*args, **kwargs):
             print(" - %s %s %s" % (function.__name__, args, kwargs))
             response = function(*args, **kwargs)
-            if debug_:
-                print(response.data)
+            debug(response)
             assert response.status == args[0]
             return response.data
         return wrapper
@@ -56,12 +67,15 @@ def create_warehouse(expect, account, name):
     return hug.test.post(mastok, '/warehouses', {'name': name }, headers=headers(account))
 
 @test()
+def update_warehouse(expect, account, id, name):
+    return hug.test.put(mastok, '/warehouses/%s' % id, {'name': name }, headers=headers(account))
+
+@test()
 def list_warehouses(expect, account):
     return hug.test.get(mastok, '/warehouses', headers=headers(account))
 
 @test()
 def delete_warehouse(expect, account, warehouse_id):
-    print("(%s) Delete warehouse %s " % (account["mail"], warehouse_id))
     return hug.test.delete(mastok, '/warehouses/%s' % warehouse_id, headers=headers(account))
 
 @test()
@@ -106,6 +120,11 @@ def tests_mastok():
     # delete warehouse
     delete_warehouse(falcon.HTTP_401, user2, warehouse11["id"])
     delete_warehouse(falcon.HTTP_200, user1, warehouse11["id"])
+
+    #update warehouse
+    update_warehouse(falcon.HTTP_200, user1, warehouse11["id"], 'This was my first warehouse')
+    update_warehouse(falcon.HTTP_401, user2, warehouse11["id"], 'This was my first warehouse')
+    test_value(user1, "warehouses", warehouse11["id"], "name",'This was my first warehouse')
 
 	# create location
     location111 = create_location(falcon.HTTP_200, user1, warehouse11["id"], "My first location")
