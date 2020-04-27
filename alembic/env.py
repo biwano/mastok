@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -59,6 +60,11 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    url = os.environ.get("MASTOK_SQL_ALCHEMY_URL")
+    if url is not None:
+        config.set_main_option("sqlalchemy.url", url)
+    print(url)
+    
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",

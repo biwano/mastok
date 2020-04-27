@@ -1,5 +1,7 @@
-def error(message):
-    return {"error": message}
+def error(message, status):
+    return {"error": message,
+            "status": status
+    }
 
 def ok(message):
     return {"result": message}

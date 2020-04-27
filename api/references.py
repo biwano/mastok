@@ -3,7 +3,7 @@ import falcon
 import uuid
 import hug
 from sqlalchemy.orm.exc import NoResultFound
-from model import Session, Location, queries
+from model import Session, Location, Reference, queries
 from . import helpers
 
 
@@ -14,12 +14,12 @@ def shared():
 
 @hug.post('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def create_location(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id, name):
+def create_reference(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id, name):
     """Creates a location"""
     try:
         warehouse = queries.user_warehouse(session, user, warehouse_id)
-        location = Location(warehouse=warehouse, name=name)
-        return location
+        reference = Reference(warehouse=warehouse, name=name)
+        return reference
     except NoResultFound:
         return helpers.response.error("warehouse_not_found", falcon.HTTP_401)
     

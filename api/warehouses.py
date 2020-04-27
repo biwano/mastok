@@ -1,7 +1,8 @@
 """ part of the API managing warehouses """
+import falcon
 import hug
 from sqlalchemy.orm.exc import NoResultFound
-from model import Warehouse, Warehouse_ACE, queries
+from model import Warehouse, Warehouse_ACE, Location, queries
 from . import helpers
 
 
@@ -15,21 +16,22 @@ def shared():
 def create_warehouse(session: helpers.extend.session, user: hug.directives.user, name):
     """Creates a warehouse"""
     warehouse = Warehouse(name=name)
-    ace = Warehouse_ACE(warehouse=warehouse, user=user)
+    ace = Warehouse_ACE(warehouse=warehouse, user=user, role=helpers.roles.owner)
+    location = Location(warehouse=warehouse, name="Default")
     session.add(ace)
     return warehouse
 
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def delete_warehouse(session: helpers.extend.session, user: hug.directives.user, id: int):
+def delete_warehouse(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes an account"""
     try:
-        warehouse = queries.user_warehouses(session, user).filter(Warehouse.id == id).one()
+        warehouse = queries.user_warehouse(session, user, id)
         session.delete(warehouse)
         return helpers.response.ok("warehouse_deleted")
     except NoResultFound:
-        return helpers.response.error("warehouse_not_found")
+        return helpers.response.error("warehouse_not_found", falcon.HTTP_401)
 
 @hug.get('/', requires=helpers.authentication.is_authenticated)
 @helpers.wraps

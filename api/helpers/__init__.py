@@ -15,24 +15,34 @@ def wraps(func):
     """ Wraps a view so errors and session are handled automagically """
     @hug.decorators.wraps(func)
     def wrapper(*args, **kwargs):
+        session = None
+        resp = None
         try:
             if "session" in kwargs:
                 session = kwargs["session"]
-            else:
-                session = SESSION()
+            if "response" in kwargs:
+                resp = kwargs["response"]
+            # Execute view
             res = func(*args, **kwargs)
+            # Commits instance in db and serialize it
             if issubclass(type(res), BASE):
-                session.add(res)
-                session.commit()
+                if session is not None:
+                    session.add(res)
+                    session.commit()
                 res = response.item(res)
+            # Serialize list of objects
             elif type(res) == list:
                 res = response.list(res)
-            session.commit()
+            # If error sets response status
+            elif "error" in res and response is not None:
+                resp.status = res["status"]
+            # Return response
             return res
         except Exception as exc:
             traceback.print_exc()
             logger.critical("Unhandled error caught by wrapper")
-            session.rollback()
+            if session is not None:
+                session.rollback()
             res = {"error": repr(exc)}
         finally:
             session.close()

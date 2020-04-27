@@ -3,10 +3,11 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, Column, String, Integer, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 import config
-from .model import BASE, User, Warehouse, Warehouse_ACE, Location
+from .model import BASE, User, Warehouse, Warehouse_ACE, Location, Reference, Item
 from . import queries
 
-ENGINE = create_engine(config.get("sqlalchemy", "url"), echo=True)
+ENGINE = create_engine(config.get("sqlalchemy", "url"), 
+                       echo=config.getboolean("sqlalchemy", "echo"))
 SESSION = sessionmaker(bind=ENGINE)
 
 
