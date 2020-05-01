@@ -42,7 +42,7 @@ class Warehouse(BASE, SerializerMixin):
     locations = ManyToOne("Location", "warehouse")
     references = ManyToOne("Reference", "warehouse")
 
-    serialize_rules = ('-aces.warehouse', '-locations.warehouse', '-references.warehouse')
+    serialize_rules = ('-aces', '-locations.warehouse', '-references.warehouse')
 
     def __repr__(self):
         return "<Warehouse %s: %s>" % (self.id, self.name)
@@ -56,6 +56,9 @@ class Location(BASE, SerializerMixin):
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
 
     items = ManyToOne("Item", "location")
+
+    serialize_rules = ('-warehouse', )
+    UniqueConstraint('warehouse_id', 'name', name='uniq_location_name')
 
     def __repr__(self):
         return "<Location %s of warehouse %s: %s>" % (self.id, self.warehouse_id, self.name)
@@ -81,6 +84,8 @@ class Reference(BASE, SerializerMixin):
     items = ManyToOne("Item", "reference")
     UniqueConstraint('warehouse_id', 'name', name='uniq_reference_name')
 
+    serialize_rules = ('-warehouse', )
+
     def __repr__(self):
         return "<Reference %s of Warehouse %s: %s>" % (self.id, self.warehouse_id, self.name)
 
@@ -95,4 +100,4 @@ class Item(BASE, SerializerMixin):
     serialize_rules = ('-location', '-reference')
 
     def __repr__(self):
-        return "<Item %s in location %s>" % (self.id, self.location_id)
+        return "<Item %s in location %s>" % (self.reference_id, self.location_id)

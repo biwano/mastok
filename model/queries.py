@@ -23,9 +23,10 @@ def user_reference(session, user, id):
 		filter(Reference.id==id).\
 	    filter(Reference.warehouse_id == Warehouse.id))
 
-def user_item(session, user, id):
-	return has_warehouse(user,
-		session.query(Item).\
-		filter(Item.id==id).\
-		filter(Item.location_id == Location.id).\
-	    filter(Location.warehouse_id == Warehouse.id))
+def user_item(session, user, location_id, reference_id):
+    return has_warehouse(user,
+        session.query(Item).\
+        filter(Item.location_id == location_id).\
+        filter(Item.reference_id == reference_id).\
+        filter(Item.location_id == Location.id).\
+        filter(Location.warehouse_id == Warehouse.id))

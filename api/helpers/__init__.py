@@ -31,7 +31,7 @@ def wraps(func):
             if issubclass(type(res), BASE):
                 if session is not None:
                     session.add(res)
-                    session.commit()
+                    session.flush()
                 res = response.item(res)
             # Serialize list of objects
             elif type(res) == list:
@@ -40,6 +40,8 @@ def wraps(func):
             elif "error" in res and response is not None:
                 resp.status = res["status"]
             # Return response
+            if session is not None:
+                session.commit()
             return res
         except Exception as exc:
             traceback.print_exc()
@@ -63,6 +65,7 @@ def get(model, session, query):
 def delete(model, session, query):
     try:
         obj = query.one()
+        print(obj)
         session.delete(obj)
         return response.ok("%s_deleted" % model)
     except NoResultFound:

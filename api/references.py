@@ -43,4 +43,4 @@ def list_references(session: helpers.extend.session, user: hug.directives.user, 
     """ Lists warehouse references """
     return helpers.do_in_warehouse("reference",
     	queries.user_warehouse(session, user, warehouse_id),
-    	lambda warehouse: session.query(Reference).filter(warehouse=warehouse))
+    	lambda warehouse: session.query(Reference).filter_by(warehouse=warehouse).all())

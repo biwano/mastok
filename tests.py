@@ -7,16 +7,17 @@ import mastok
 import falcon
 import config
 import sys
+import json
+from urllib.parse import urlencode
 
 # Delete DB if it exists
 PARENT = pathlib.Path(__file__).parent
 try:
     os.remove(PARENT / "mastok.test.db")
 except:
-	pass
+    pass
 
 debug_ = len(sys.argv) > 1
-print(debug_)
 
 # Create db with alembic
 os.environ["MASTOK_SQL_ALCHEMY_URL"] = config.get("sqlalchemy", "url")
@@ -25,25 +26,36 @@ output = stream.read()
 print(output)
 
 def headers(user=None):
-	return {
-		"X-API-KEY": user["api_key"] if user is not None else "bad api key"
-	}
+    return {
+        "X-API-KEY": user["api_key"] if user is not None else "bad api key"
+    }
 
 def debug(response):
     if debug_:
-        print(response.data)
+        print(json.dumps(response.data, indent=4, sort_keys=True))
         print("\n")
 
-def test_value(account, model, id, field, value):
-    url = '/%s/%s' % (model, id)
-    print("Testing %s[%s].%s = %s (%s)" % (model, id, field, value, url))
-    response = hug.test.get(mastok, url, headers=headers(account))
+def get(account, model, id):
+    u = url_and_param(model, id)
+    response = hug.test.get(mastok, u["url"], params=u["params"], headers=headers(account))
     debug(response)
-    assert response.data[field] == value
+    return response.data
 
-def test():
+def test_value(account, model, id, field, value):
+    print("Testing %s[%s].%s = %s" % (model, id, field, value))
+    data = get(account, model, id)
+    assert data[field] == value
+
+def test(autoroute=False):
     def decorator(function):
         def wrapper(*args, **kwargs):
+            if autoroute:
+                model = args[2]
+                id = args[3]
+                u = url_and_param(model, id)
+                kwargs["url"] = u["url"]
+                kwargs["params"] = u["params"]
+
             print(" - %s %s %s" % (function.__name__, args, kwargs))
             response = function(*args, **kwargs)
             debug(response)
@@ -51,8 +63,16 @@ def test():
             return response.data
         return wrapper
     return decorator
-  
-        
+
+def url_and_param(model, id):
+    if type(id)==int:
+        url = '/%s/%s' % (model, id)
+        params=None
+    else:
+        url = '/%s' % model
+        params = id
+    return { "url": url, "params": params}
+       
 
 @test()
 def create_user(expect, mail):
@@ -60,93 +80,113 @@ def create_user(expect, mail):
 
 @test()
 def list_users(expect, account):
-    return hug.test.get(mastok, '/users',headers=headers(account))
+    return hug.test.get(mastok, '/users', headers=headers(account))
 
 @test()
-def create_warehouse(expect, account, name):
-    return hug.test.post(mastok, '/warehouses', {'name': name }, headers=headers(account))
+def create(expect, account, model, payload):
+    return hug.test.post(mastok, '/%s' % model, payload, headers=headers(account))
 
 @test()
-def update_warehouse(expect, account, id, name):
-    return hug.test.put(mastok, '/warehouses/%s' % id, {'name': name }, headers=headers(account))
+def list(expect, account, model, params=None):
+    return hug.test.get(mastok, '/%s' % model, params=params, headers=headers(account))
 
-@test()
-def list_warehouses(expect, account):
-    return hug.test.get(mastok, '/warehouses', headers=headers(account))
+@test(autoroute=True)
+def delete(expect, account, model, id, url=None, params=None):
+    return hug.test.delete(mastok, url, params=params, headers=headers(account))
 
-@test()
-def delete_warehouse(expect, account, warehouse_id):
-    return hug.test.delete(mastok, '/warehouses/%s' % warehouse_id, headers=headers(account))
+@test(autoroute=True)
+def update(expect, account, model, id, payload, url=None, params=None):
+    return hug.test.put(mastok, url, payload, params=params, headers=headers(account))
 
-@test()
-def create_location(expect, account, warehouse_id, name):
-    return hug.test.post(mastok, '/locations/', 
-    	{"name": name, "warehouse_id": warehouse_id}, headers=headers(account))
+def test_list_update_delete(owner, faker, model, nb, id, payload, params=None):
+    # list things
+    things = list(falcon.HTTP_200, owner, model, params)
+    assert len(things) == nb
 
-@test()
-def create_reference(expect, account, warehouse_id, name):
-    return hug.test.post(mastok, '/references/', 
-    	{"name": name, "warehouse_id": warehouse_id}, headers=headers(account))
+    # update things
+    update(falcon.HTTP_200, owner, model, id, payload)
+    update(falcon.HTTP_401, faker, model, id, payload)
+    thing = get(owner, model, id)
+    for key in payload:
+        assert(thing[key] == payload[key])
 
-@test()
-def create_item(expect, account, location_id, reference_id, quantity):
-    return hug.test.post(mastok, '/items/', 
-    	{"location_id": location_id, "reference_id": reference_id, "quantity": quantity}, headers=headers(account))
+
+    # delete things
+    delete(falcon.HTTP_401, faker, model, id)
+    delete(falcon.HTTP_200, owner, model, id)
+    assert len(list(falcon.HTTP_200, owner, model, params)) == nb - 1
 
 
 def tests_mastok():
     admin_user = config.getdict("authentication", "admin_user")
     admin_api_key = admin_user["api_key"]
 
-	# create user
+    ############################## USERS
+    # create user
     user1 = create_user(falcon.HTTP_200, "user1@mastok.com")
     user2 = create_user(falcon.HTTP_200, "user2@mastok.com")
     create_user(falcon.HTTP_401, "user2@mastok.com")
 
-	# list users
+    # list users
     users = list_users(falcon.HTTP_200, admin_user)
     assert len(users) == 2
+    # non admin cant list users
     list_users(falcon.HTTP_401, user1)
 
-	# create warehouse
-    warehouse11 = create_warehouse(falcon.HTTP_200, user1, 'My first warehouse')
-    warehouse12 = create_warehouse(falcon.HTTP_200, user1, 'My second warehouse')
-    warehouse21 = create_warehouse(falcon.HTTP_200, user2, 'My first warehouse (2)')
+    ############################## WAREHOUSES
+    # create warehouse
+    warehouse11 = create(falcon.HTTP_200, user1, "warehouses", { "name": 'My first warehouse'})
+    warehouse12 = create(falcon.HTTP_200, user1, "warehouses", { "name": 'My second warehouse'})
+    warehouse21 = create(falcon.HTTP_200, user2, "warehouses", { "name": 'My first warehouse (2)'})
+    warehouse22 = create(falcon.HTTP_200, user2, "warehouses", { "name": 'My second warehouse (2)'})
 
-	# list warehouses
-    warehouses = list_warehouses(falcon.HTTP_200, user1)
-    assert len(warehouses) == 2
+    test_list_update_delete(user2, user1, "warehouses", 2, warehouse22["id"], {"name":'This was My second warehouse (2)'})
+    
 
-    # delete warehouse
-    delete_warehouse(falcon.HTTP_401, user2, warehouse11["id"])
-    delete_warehouse(falcon.HTTP_200, user1, warehouse11["id"])
+    ############################## LOCATIONS
+    # create location
+    location111 = create(falcon.HTTP_200, user1, "locations", {"warehouse_id": warehouse11["id"], "name": "My first location"})
+    location112 = create(falcon.HTTP_200, user1, "locations", {"warehouse_id": warehouse11["id"], "name": "My second location"})
+    location121 = create(falcon.HTTP_200, user1, "locations", {"warehouse_id": warehouse12["id"], "name": "My third location"})
+    create(falcon.HTTP_401, user2, "locations", {"warehouse_id": warehouse11["id"], "name": "My fourth location"})
+    location211 = create(falcon.HTTP_200, user2, "locations", {"warehouse_id": warehouse21["id"], "name": "My fifth location"})
+    location212 = create(falcon.HTTP_200, user2, "locations", {"warehouse_id": warehouse21["id"], "name": "My sixth location"})
+    location213 = create(falcon.HTTP_200, user2, "locations", {"warehouse_id": warehouse21["id"], "name": "My seventh location"})
 
-    #update warehouse
-    update_warehouse(falcon.HTTP_200, user1, warehouse11["id"], 'This was my first warehouse')
-    update_warehouse(falcon.HTTP_401, user2, warehouse11["id"], 'This was my first warehouse')
-    test_value(user1, "warehouses", warehouse11["id"], "name",'This was my first warehouse')
+    # list locations
+    list(falcon.HTTP_401, user2, "locations/", { "warehouse_id": warehouse11["id"]})
+    locations = list(falcon.HTTP_200, user1, "locations/", { "warehouse_id": warehouse11["id"]})
+    assert len(locations) == 2
 
-	# create location
-    location111 = create_location(falcon.HTTP_200, user1, warehouse11["id"], "My first location")
-    location112 = create_location(falcon.HTTP_200, user1, warehouse11["id"], "My second location")
-    location121 = create_location(falcon.HTTP_200, user1, warehouse12["id"], "My third location")
-    create_location(falcon.HTTP_401, user2, warehouse11["id"], "My fourth location")
-    location211 = create_location(falcon.HTTP_200, user2, warehouse21["id"], "My fifth location")
+    test_list_update_delete(user2, user1, "locations", 3, location213["id"], {"name":'This was My seventh location'}, params={"warehouse_id": warehouse21["id"]})
 
-	# create reference
-    reference111 = create_reference(falcon.HTTP_200, user1, warehouse11["id"], "My first reference")
-    reference112 = create_reference(falcon.HTTP_200, user1, warehouse11["id"], "My second reference")
-    reference121 = create_reference(falcon.HTTP_200, user1, warehouse12["id"], "My third reference")
-    create_reference(falcon.HTTP_401, user2, warehouse12["id"], "My fourth reference")
-    reference211 = create_reference(falcon.HTTP_200, user2, warehouse21["id"], "My fifth reference")
+    ############################## REFERENCES
+    # create reference
+    reference111 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My first reference"})
+    reference112 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My second reference"})
+    reference121 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse12["id"], "name": "My third reference"})
+    create(falcon.HTTP_401, user2, "references", {"warehouse_id": warehouse12["id"], "name": "My fourth reference"})
+    reference211 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My fifth reference"})
+    reference212 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My sixth reference"})
+    reference213 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My seventh reference"})
 
-	# create item
-    create_item(falcon.HTTP_200, user1, location111["id"], reference111["id"], 5)
-    create_item(falcon.HTTP_200, user1, location111["id"], reference112["id"], 10)
-    create_item(falcon.HTTP_200, user1, location121["id"], reference121["id"], 15)
-    create_item(falcon.HTTP_400, user1, location111["id"], reference121["id"], 20)
-    create_item(falcon.HTTP_401, user2, location111["id"], reference111["id"], 25)
+    test_list_update_delete(user2, user1, "references", 3, reference213["id"], {"name":'This was My seventh reference'}, params={"warehouse_id": warehouse21["id"]})
 
+    ############################## ITEMS
+    # create item
+    item11 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5})
+    item12 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10})
+    item13 = create(falcon.HTTP_200, user1, "items", { "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15})
+    create(falcon.HTTP_400, user1, "items", { "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
+    create(falcon.HTTP_401, user2, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity":25}) # not authorized
+    item21 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30})
+    item22 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40})
+    item23 = create(falcon.HTTP_200, user2, "items", { "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50})
+    create(falcon.HTTP_400, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35}) # duplicate location and reference
 
+    test_list_update_delete(user2, user1, "items", 1, 
+        {"location_id": location212["id"], "reference_id": reference212["id"]},
+        {"quantity":7},
+        {"location_id": location212["id"]})
 
 tests_mastok()
