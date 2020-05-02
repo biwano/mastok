@@ -22,7 +22,7 @@ class User(BASE, SerializerMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    mail = Column(String, unique=True, nullable=False)
+    mail = Column(String(128), unique=True, nullable=False)
     api_key = Column(String(32), unique=True)
     warehouse_aces = ManyToOne("Warehouse_ACE", "user")
 
