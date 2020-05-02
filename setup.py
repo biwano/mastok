@@ -11,7 +11,7 @@ setup(name='mastok',
           'hug',
           'SQLAlchemy',
           'SQLAlchemy-serializer',
-          'mysqlclient',
+          'psycopg2',
           'alembic'
       ],
 #      packages=[],

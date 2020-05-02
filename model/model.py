@@ -22,7 +22,7 @@ class User(BASE, SerializerMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    mail = Column(String(128), unique=True, nullable=False)
+    mail = Column(String, unique=True, nullable=False)
     api_key = Column(String(32), unique=True)
     warehouse_aces = ManyToOne("Warehouse_ACE", "user")
 
@@ -36,7 +36,7 @@ class Warehouse(BASE, SerializerMixin):
     __tablename__ = 'warehouses'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(64), nullable=False)
+    name = Column(String, nullable=False)
 
     aces = ManyToOne("Warehouse_ACE", "warehouse")
     locations = ManyToOne("Location", "warehouse")
@@ -52,7 +52,7 @@ class Location(BASE, SerializerMixin):
     __tablename__ = 'locations'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(64), nullable=False)
+    name = Column(String, nullable=False)
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
 
     items = ManyToOne("Item", "location")
@@ -80,7 +80,7 @@ class Reference(BASE, SerializerMixin):
 
     id = Column(Integer, primary_key=True)
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
-    name = Column(String(64), nullable=False)
+    name = Column(String, nullable=False)
     items = ManyToOne("Item", "reference")
     UniqueConstraint('warehouse_id', 'name', name='uniq_reference_name')
 
