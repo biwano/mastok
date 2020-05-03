@@ -9,9 +9,9 @@ setup(name='mastok',
       license='MIT',
       install_requires=[
           'hug',
+          'hug_middleware_cors',
           'SQLAlchemy',
           'SQLAlchemy-serializer',
-          'psycopg2',
           'alembic'
       ],
 #      packages=[],
