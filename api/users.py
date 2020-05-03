@@ -4,7 +4,11 @@ import hug
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from model import User
 from . import helpers
+import re
 
+def is_mail(mail):
+    matchObj = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", mail, flags=0)
+    return matchObj is not None
 
 @hug.extend_api()
 def shared():
@@ -15,13 +19,31 @@ def shared():
 @helpers.wraps
 def create_user(session: helpers.extend.session, response, mail):
     """Creates an account"""
+    if len(mail) == 0:
+        return helpers.response.error("user_mail_empty", falcon.HTTP_400)
+    if not is_mail(mail):
+        return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
     try:
         session.query(User).filter(User.mail == mail).one()
-        return helpers.response.error("user_exists", falcon.HTTP_401)
+        return helpers.response.error("user_exists", falcon.HTTP_400)
     except NoResultFound:
         user = User(mail=mail, api_key=helpers.make_key())
         session.add(user)
         return user
+
+@hug.get('/by_mail/{mail}')
+@helpers.wraps
+def get_user(session: helpers.extend.session, response, mail):
+    """Creates an account"""
+    try:
+        requested_user = session.query(User).filter(User.mail == mail).one()
+        #TODO: if user has password return error
+        #helpers.authentication.authenticate_user_key()
+        user = User(mail=mail, api_key=helpers.make_key())
+        return requested_user
+        return user
+    except NoResultFound:
+        return helpers.response.error("user_not_found", falcon.HTTP_400)
 
 @hug.delete('/{id}', requires=helpers.authentication.is_admin)
 @helpers.wraps
@@ -31,7 +53,7 @@ def delete_user(session: helpers.extend.session, response, id: int):
     if user is not None:
         session.delete(user)
         return helpers.response.ok("user_deleted")
-    return helpers.response.error("user_not_found")
+    return helpers.response.error("user_not_found", falcon.HTTP_400)
 
 
 @hug.get('/', requires=helpers.authentication.is_admin)

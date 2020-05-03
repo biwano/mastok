@@ -79,6 +79,10 @@ def create_user(expect, mail):
     return hug.test.post(mastok, '/users', {'mail': mail })
 
 @test()
+def delete_user(expect, account, id):
+    return hug.test.delete(mastok, '/users/%s' %id, headers=headers(account))
+
+@test()
 def list_users(expect, account):
     return hug.test.get(mastok, '/users', headers=headers(account))
 
@@ -97,6 +101,7 @@ def delete(expect, account, model, id, url=None, params=None):
 @test(autoroute=True)
 def update(expect, account, model, id, payload, url=None, params=None):
     return hug.test.put(mastok, url, payload, params=params, headers=headers(account))
+
 
 def test_list_update_delete(owner, faker, model, nb, id, payload, params=None):
     # list things
@@ -123,9 +128,14 @@ def tests_mastok():
 
     ############################## USERS
     # create user
+    create_user(falcon.HTTP_400, "wrongemail@address")
     user1 = create_user(falcon.HTTP_200, "user1@mastok.com")
     user2 = create_user(falcon.HTTP_200, "user2@mastok.com")
-    create_user(falcon.HTTP_401, "user2@mastok.com")
+    user3 = create_user(falcon.HTTP_200, "user3@mastok.com")
+    create_user(falcon.HTTP_400, "user2@mastok.com")
+    delete_user(falcon.HTTP_401, user1, user3["id"])
+    delete_user(falcon.HTTP_200, admin_user, user3["id"])
+    # TODO: test get user
 
     # list users
     users = list_users(falcon.HTTP_200, admin_user)
