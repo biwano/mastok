@@ -65,7 +65,6 @@ def get(model, session, query):
 def delete(model, session, query):
     try:
         obj = query.one()
-        print(obj)
         session.delete(obj)
         return response.ok("%s_deleted" % model)
     except NoResultFound:

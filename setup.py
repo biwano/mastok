@@ -13,6 +13,11 @@ setup(name='mastok',
           'SQLAlchemy-serializer',
           'alembic'
       ],
-#      packages=[],
+      extras_require={
+          'dev': [
+              'pylint'
+          ]
+      },
+      #      packages=[],
 
       zip_safe=False)

@@ -33,10 +33,10 @@ def create_item(session: helpers.extend.session, user: hug.directives.user, resp
     
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def get_reference(session: helpers.extend.session, user: hug.directives.user, response, location_id: int, reference_id: int=None):
+def get_item(session: helpers.extend.session, user: hug.directives.user, response, location_id: int, reference_id: int=None):
     """Gets a item"""
     if reference_id is not None:
-         return helpers.get("reference", session, queries.user_item(session, user, location_id, reference_id))
+         return helpers.get("item", session, queries.user_item(session, user, location_id, reference_id))
     else:
         """ Lists warehouse items """
         return helpers.do_in_location("item",

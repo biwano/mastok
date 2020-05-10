@@ -39,8 +39,13 @@ def delete_reference(session: helpers.extend.session, user: hug.directives.user,
 
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def list_references(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int):
+def list_references(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name=None):
     """ Lists warehouse references """
+    def filter(warehouse):
+        query = session.query(Reference).filter_by(warehouse=warehouse)
+        print(name)
+        if name:
+            query = query.filter_by(name=name)
+        return query.all()
     return helpers.do_in_warehouse("reference",
-    	queries.user_warehouse(session, user, warehouse_id),
-    	lambda warehouse: session.query(Reference).filter_by(warehouse=warehouse).all())
+    	queries.user_warehouse(session, user, warehouse_id),filter)
