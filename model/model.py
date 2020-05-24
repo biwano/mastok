@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine, Column, String, Integer, ForeignKey, MetaData, UniqueConstraint
+from sqlalchemy import create_engine, Column, String, Integer, TIMESTAMP, DATE, Table, ForeignKey, MetaData, UniqueConstraint
+from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.orm import sessionmaker, relationship, backref
+import datetime
 
 
 meta = MetaData(naming_convention={
@@ -13,6 +15,8 @@ meta = MetaData(naming_convention={
       })
 
 BASE = declarative_base(metadata=meta)
+BASE.modified = Column(TIMESTAMP, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
 def ManyToOne(remote_table, remote_field):
     return relationship(remote_table,
                         backref=backref(remote_field, single_parent=True),
@@ -41,8 +45,9 @@ class Warehouse(BASE, SerializerMixin):
     aces = ManyToOne("Warehouse_ACE", "warehouse")
     locations = ManyToOne("Location", "warehouse")
     references = ManyToOne("Reference", "warehouse")
+    categories = ManyToOne("Category", "warehouse")
 
-    serialize_rules = ('-aces', '-locations.warehouse', '-references.warehouse')
+    serialize_rules = ('-aces', '-locations.warehouse', '-references.warehouse', '-categories.warehouse')
 
     def __repr__(self):
         return "<Warehouse %s: %s>" % (self.id, self.name)
@@ -74,6 +79,9 @@ class Warehouse_ACE(BASE, SerializerMixin):
     def __repr__(self):
         return "<User %s is %s of Warehouse %s: %s>" % (self.user_id, self.role, self.warehouse_id, self.name)
 
+ReferenceCategory = Table('ReferenceCategory', BASE.metadata,
+    Column('reference_id', Integer, ForeignKey('references.id'), primary_key=True),
+    Column('category_id', Integer, ForeignKey('categories.id'), primary_key=True))
 
 class Reference(BASE, SerializerMixin):
     __tablename__ = 'references'
@@ -82,22 +90,43 @@ class Reference(BASE, SerializerMixin):
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
     name = Column(String, nullable=False)
     items = ManyToOne("Item", "reference")
+    categories = relationship("Category", secondary=ReferenceCategory, backref="references")
     UniqueConstraint('warehouse_id', 'name', name='uniq_reference_name')
 
-    serialize_rules = ('-warehouse', '-items')
+    serialize_only = ('id', 'warehouse_id', 'name', 'categories.name', 'categories.id')
 
     def __repr__(self):
         return "<Reference %s of Warehouse %s: %s>" % (self.id, self.warehouse_id, self.name)
+
+class Category(BASE, SerializerMixin):
+    __tablename__ = 'categories'
+
+    id = Column(Integer, primary_key=True)
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
+    name = Column(String, nullable=False)
+    #references = relationship("Reference", secondary=ReferenceCategory, backref="categories")
+    UniqueConstraint('warehouse_id', 'name', name='uniq_category_name')
+
+    serialize_only = ('id', 'warehouse_id', 'name', 'references.name', 'references.id')
+
+    def __repr__(self):
+        return "<Category %s of Warehouse %s: %s>" % (self.id, self.warehouse_id, self.name)
+
+
 
 
 class Item(BASE, SerializerMixin):
     __tablename__ = 'items'
 
-    reference_id = Column(Integer, ForeignKey('references.id'), primary_key=True)
-    location_id = Column(Integer, ForeignKey('locations.id'), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    reference_id = Column(Integer, ForeignKey('references.id'))
+    location_id = Column(Integer, ForeignKey('locations.id'))
     quantity = Column(Integer, nullable=False)
+    target_quantity = Column(Integer)
+    expiry  = Column(DATE)
 
     serialize_rules = ('-location', 'reference.name', '-reference.warehouse', '-reference.items')
 
     def __repr__(self):
         return "<Item %s in location %s>" % (self.reference_id, self.location_id)
+

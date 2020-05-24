@@ -27,7 +27,6 @@ def get_location(session: helpers.extend.session, user: hug.directives.user, res
 @helpers.wraps
 def update_location(session: helpers.extend.session, user: hug.directives.user, response, id: int, name):
     """Updates a location"""
-    print("AAA")
     return helpers.update("location", session, queries.user_location(session, user, id), {"name": name})
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)

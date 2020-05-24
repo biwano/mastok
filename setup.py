@@ -11,7 +11,8 @@ setup(name='mastok',
           'hug',
           'SQLAlchemy',
           'SQLAlchemy-serializer',
-          'alembic'
+          'alembic',
+          'marshmallow'
       ],
       extras_require={
           'dev': [

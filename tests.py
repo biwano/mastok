@@ -8,6 +8,7 @@ import falcon
 import config
 import sys
 import json
+import datetime
 from urllib.parse import urlencode
 
 # Delete DB if it exists
@@ -170,9 +171,23 @@ def tests_mastok():
 
     test_list_update_delete(user2, user1, "locations", 3, location213["id"], {"name":'This was My seventh location'}, params={"warehouse_id": warehouse21["id"]})
 
+    ############################## CATEGORIES
+    # create category
+    category111 = create(falcon.HTTP_200, user1, "categories", {"warehouse_id": warehouse11["id"], "name": "My first category"})
+    category112 = create(falcon.HTTP_200, user1, "categories", {"warehouse_id": warehouse11["id"], "name": "My second category"})
+    category121 = create(falcon.HTTP_200, user1, "categories", {"warehouse_id": warehouse12["id"], "name": "My third category"})
+    create(falcon.HTTP_401, user2, "categories", {"warehouse_id": warehouse12["id"], "name": "My fourth category"})
+    category211 = create(falcon.HTTP_200, user2, "categories", {"warehouse_id": warehouse21["id"], "name": "My fifth category"})
+    category212 = create(falcon.HTTP_200, user2, "categories", {"warehouse_id": warehouse21["id"], "name": "My sixth category"})
+    category213 = create(falcon.HTTP_200, user2, "categories", {"warehouse_id": warehouse21["id"], "name": "My seventh category"})
+
+    test_list_update_delete(user2, user1, "categories", 3, category213["id"], {"name":'This was My seventh category'}, params={"warehouse_id": warehouse21["id"]})
+
     ############################## REFERENCES
     # create reference
-    reference111 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My first reference"})
+
+    reference111 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My first reference", "categories": [category111["id"]]})
+    """
     reference112 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My second reference"})
     reference121 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse12["id"], "name": "My third reference"})
     create(falcon.HTTP_401, user2, "references", {"warehouse_id": warehouse12["id"], "name": "My fourth reference"})
@@ -182,21 +197,22 @@ def tests_mastok():
 
     test_list_update_delete(user2, user1, "references", 3, reference213["id"], {"name":'This was My seventh reference'}, params={"warehouse_id": warehouse21["id"]})
 
+    expiry = datetime.date.today().strftime("%Y-%m-%d")
     ############################## ITEMS
     # create item
-    item11 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5})
-    item12 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10})
-    item13 = create(falcon.HTTP_200, user1, "items", { "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15})
+    item11 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry})
+    item12 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10, "expiry": expiry})
+    item13 = create(falcon.HTTP_200, user1, "items", { "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15, "expiry": expiry})
     create(falcon.HTTP_400, user1, "items", { "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
     create(falcon.HTTP_401, user2, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity":25}) # not authorized
-    item21 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30})
-    item22 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40})
-    item23 = create(falcon.HTTP_200, user2, "items", { "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50})
-    create(falcon.HTTP_400, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35}) # duplicate location and reference
+    item21 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30, "expiry": expiry})
+    item22 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40, "expiry": expiry})
+    item23 = create(falcon.HTTP_200, user2, "items", { "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50, "expiry": expiry})
+    create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
-    test_list_update_delete(user2, user1, "items", 1, 
-        {"location_id": location212["id"], "reference_id": reference212["id"]},
-        {"quantity":7},
+    test_list_update_delete(user2, user1, "items", 1, item23["id"],
+        {"quantity":7, "target_quantity": 15, "expiry": "2022-12-15"},
         {"location_id": location212["id"]})
+    """
 
 tests_mastok()

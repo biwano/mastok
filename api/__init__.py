@@ -3,6 +3,7 @@ from . import users
 from . import warehouses
 from . import locations
 from . import references
+from . import categories
 from . import items
 from model import SESSION
 
@@ -24,6 +25,10 @@ def locations_api():
 @hug.extend_api('/references')
 def references_api():
     return [references]
+
+@hug.extend_api('/categories')
+def categories_api():
+    return [categories]
 
 @hug.extend_api('/items')
 def items_api():
