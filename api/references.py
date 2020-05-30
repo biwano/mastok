@@ -3,6 +3,7 @@ import hug
 import falcon
 from model import Reference, queries
 from . import helpers
+from marshmallow import fields
 
 
 @hug.extend_api()
@@ -11,18 +12,25 @@ def shared():
     return [helpers.extend]
 
 
-
-@hug.post('', requires=helpers.authentication.is_authenticated)
-@helpers.wraps
-def create_reference(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name, categories=None):
-    """Creates a reference"""
+def get_db_categories(session, user, warehouse_id, categories):
     if categories:
         db_categories = queries.warehouse_categories(session, user, warehouse_id, categories).all()
         if (len(db_categories) != len(categories)):
-            return response.error("incoherent_request", falcon.HTTP_400)
+            return None
+    else:
+        db_categories = []
+    return db_categories
+
+@hug.post('', requires=helpers.authentication.is_authenticated)
+@helpers.wraps
+def create_reference(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name, categories=None, target_quantity: fields.Int(allow_none=True)=None):
+    """Creates a reference"""
+    db_categories = get_db_categories(session, user, warehouse_id, categories)
+    if db_categories == None:
+        return response.error("incoherent_request", falcon.HTTP_400)
     return helpers.do_in_warehouse("reference",
     	queries.user_warehouse(session, user, warehouse_id),
-    	lambda warehouse: Reference(warehouse=warehouse, name=name, categories=db_categories))
+    	lambda warehouse: Reference(warehouse=warehouse, name=name, categories=db_categories, target_quantity=target_quantity))
 
 @hug.get('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -32,9 +40,12 @@ def get_reference(session: helpers.extend.session, user: hug.directives.user, re
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def update_reference(session: helpers.extend.session, user: hug.directives.user, response, id: int, name, categories=None):
+def update_reference(session: helpers.extend.session, user: hug.directives.user, response, id: int, name, categories=None, target_quantity: fields.Int(allow_none=True)=None):
     """Updates a reference"""
-    return helpers.update("reference", session, queries.user_reference(session, user, id), {"name": name})
+    db_categories = get_db_categories(session, user, session.query(Reference).get(id).warehouse_id, categories)
+    if db_categories==None:
+        return response.error("incoherent_request", falcon.HTTP_400)
+    return helpers.update("reference", session, queries.user_reference(session, user, id), {"name": name, "categories":db_categories, "target_quantity": target_quantity })
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps

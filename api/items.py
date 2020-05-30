@@ -15,14 +15,14 @@ def shared():
 
 @hug.post('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def create_item(session: helpers.extend.session, user: hug.directives.user, response, location_id: int, reference_id: int, quantity: int, target_quantity: int=None, expiry: fields.Date()=None):
+def create_item(session: helpers.extend.session, user: hug.directives.user, response, location_id: int, reference_id: int, quantity: int, expiry: fields.Date(allow_none=True)=None):
     """Creates a location"""
     try:
         location = queries.user_location(session, user, location_id).one()
         reference = queries.user_reference(session, user, reference_id).one()
         if location.warehouse.id != reference.warehouse.id:
             return helpers.response.error("bad_location_and_or_reference", falcon.HTTP_400)
-        item = Item(location=location, reference=reference, quantity=quantity, target_quantity=target_quantity, expiry=expiry)
+        item = Item(location=location, reference=reference, quantity=quantity, expiry=expiry)
         return item
     except NoResultFound:
         return helpers.response.error("location_and_or_reference_not_found", falcon.HTTP_401)
@@ -36,9 +36,9 @@ def get_item(session: helpers.extend.session, user: hug.directives.user, respons
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, quantity: int, target_quantity: int=None, expiry: fields.Date()=None):
+def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, quantity: int, expiry: fields.Date(allow_none=True)=None):
     """Updates a item"""
-    return helpers.update("item", session, queries.user_item(session, user, id), {"quantity": quantity, "target_quantity": target_quantity, "expiry": expiry})
+    return helpers.update("item", session, queries.user_item(session, user, id), {"quantity": quantity, "expiry": expiry})
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps

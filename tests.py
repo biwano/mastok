@@ -187,15 +187,14 @@ def tests_mastok():
     # create reference
 
     reference111 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My first reference", "categories": [category111["id"]]})
-    """
     reference112 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse11["id"], "name": "My second reference"})
     reference121 = create(falcon.HTTP_200, user1, "references", {"warehouse_id": warehouse12["id"], "name": "My third reference"})
     create(falcon.HTTP_401, user2, "references", {"warehouse_id": warehouse12["id"], "name": "My fourth reference"})
     reference211 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My fifth reference"})
     reference212 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My sixth reference"})
-    reference213 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My seventh reference"})
+    reference213 = create(falcon.HTTP_200, user2, "references", {"warehouse_id": warehouse21["id"], "name": "My seventh reference", "target_quantity": 12})
 
-    test_list_update_delete(user2, user1, "references", 3, reference213["id"], {"name":'This was My seventh reference'}, params={"warehouse_id": warehouse21["id"]})
+    test_list_update_delete(user2, user1, "references", 3, reference213["id"], {"name":'This was My seventh reference', "target_quantity": 15}, params={"warehouse_id": warehouse21["id"]})
 
     expiry = datetime.date.today().strftime("%Y-%m-%d")
     ############################## ITEMS
@@ -211,8 +210,8 @@ def tests_mastok():
     create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
     test_list_update_delete(user2, user1, "items", 1, item23["id"],
-        {"quantity":7, "target_quantity": 15, "expiry": "2022-12-15"},
+        {"quantity":7, "expiry": "2022-12-15"},
         {"location_id": location212["id"]})
-    """
+    
 
 tests_mastok()

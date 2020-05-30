@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 48018b9517b3
+Revision ID: 19b38afb7c9d
 Revises: 
-Create Date: 2020-05-24 18:48:47.041585
+Create Date: 2020-05-30 21:33:36.315105
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '48018b9517b3'
+revision = '19b38afb7c9d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -54,6 +54,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('warehouse_id', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('target_quantity', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['warehouse_id'], ['warehouses.id'], name=op.f('fk_references_warehouse_id_warehouses')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_references'))
     )
@@ -79,7 +80,6 @@ def upgrade():
     sa.Column('reference_id', sa.Integer(), nullable=True),
     sa.Column('location_id', sa.Integer(), nullable=True),
     sa.Column('quantity', sa.Integer(), nullable=False),
-    sa.Column('target_quantity', sa.Integer(), nullable=True),
     sa.Column('expiry', sa.DATE(), nullable=True),
     sa.ForeignKeyConstraint(['location_id'], ['locations.id'], name=op.f('fk_items_location_id_locations')),
     sa.ForeignKeyConstraint(['reference_id'], ['references.id'], name=op.f('fk_items_reference_id_references')),
