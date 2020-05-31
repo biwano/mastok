@@ -210,7 +210,7 @@ def tests_mastok():
     create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
     test_list_update_delete(user2, user1, "items", 1, item23["id"],
-        {"quantity":7, "expiry": "2022-12-15"},
+        {"location_id": location212["id"], "quantity":7, "expiry": "2022-12-15"},
         {"location_id": location212["id"]})
     
 

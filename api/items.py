@@ -36,9 +36,9 @@ def get_item(session: helpers.extend.session, user: hug.directives.user, respons
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, quantity: int, expiry: fields.Date(allow_none=True)=None):
+def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, location_id: int, quantity: int, expiry: fields.Date(allow_none=True)=None):
     """Updates a item"""
-    return helpers.update("item", session, queries.user_item(session, user, id), {"quantity": quantity, "expiry": expiry})
+    return helpers.update("item", session, queries.user_item(session, user, id), {"location_id": location_id, "quantity": quantity, "expiry": expiry})
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
