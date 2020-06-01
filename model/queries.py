@@ -30,6 +30,9 @@ def user_category(session, user, id):
 	    filter(Category.warehouse_id == Warehouse.id))
 
 def warehouse_categories(session, user, warehouse_id, ids):
+	# Convert categories to ids 
+	ids = list(map(lambda id: id if type(id)==int else id["id"], ids))
+	print(ids)
 	return has_warehouse(user,
 		session.query(Category).\
 		filter(Category.id.in_(ids)).\
