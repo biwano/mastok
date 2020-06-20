@@ -70,9 +70,13 @@ def delete(model, session, query):
     except NoResultFound:
         return response.error("%s_not_found" % model, falcon.HTTP_401)
 
-def update(model, session, query, data):
+def update(model, session, query, dataorfunc):
     try:
         obj = query.one()
+        if (type(dataorfunc) == dict):
+            data = dataorfunc
+        else:
+            data = dataorfunc(obj)
         for key in data:
             setattr(obj, key, data[key])
         return obj

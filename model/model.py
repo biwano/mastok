@@ -30,7 +30,7 @@ class User(BASE, SerializerMixin):
     api_key = Column(String(32), unique=True)
     warehouse_aces = ManyToOne("Warehouse_ACE", "user")
 
-    serialize_rules = ('-warehouse_aces',)
+    serialize_only = ('id', 'mail', 'api_key')
 
     def __repr__(self):
         return "<User %s: %s>" % (self.id, self.mail)
@@ -46,8 +46,9 @@ class Warehouse(BASE, SerializerMixin):
     locations = ManyToOne("Location", "warehouse")
     references = ManyToOne("Reference", "warehouse")
     categories = ManyToOne("Category", "warehouse")
+    items = ManyToOne("Item", "warehouse")
 
-    serialize_rules = ('-aces', '-locations.warehouse', '-references.warehouse', '-categories.warehouse')
+    serialize_only = ('id', 'name')
 
     def __repr__(self):
         return "<Warehouse %s: %s>" % (self.id, self.name)
@@ -62,7 +63,7 @@ class Location(BASE, SerializerMixin):
 
     items = ManyToOne("Item", "location")
 
-    serialize_rules = ('-warehouse', )
+    serialize_only = ('id', 'name', 'warehouse_id')
     UniqueConstraint('warehouse_id', 'name', name='uniq_location_name')
 
     def __repr__(self):
@@ -120,12 +121,14 @@ class Item(BASE, SerializerMixin):
     __tablename__ = 'items'
 
     id = Column(Integer, primary_key=True)
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
     reference_id = Column(Integer, ForeignKey('references.id'))
     location_id = Column(Integer, ForeignKey('locations.id'))
     quantity = Column(Integer, nullable=False)
-    expiry  = Column(DATE)
+    expiry = Column(DATE)
 
-    serialize_rules = ('-location', 'reference.name', '-reference.warehouse', '-reference.items')
+    serialize_only = ('id', 'warehouse_id', 'reference_id', 'location_id', 'quantity', 'expiry',
+        'reference.name', 'location.name', 'warehouse.name')
 
     def __repr__(self):
         return "<Item %s in location %s>" % (self.reference_id, self.location_id)

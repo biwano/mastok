@@ -31,15 +31,17 @@ def headers(user=None):
         "X-API-KEY": user["api_key"] if user is not None else "bad api key"
     }
 
-def debug(response):
+def debug(txt):
     if debug_:
-        print(json.dumps(response.data, indent=4, sort_keys=True))
-        print("\n")
+        print(txt)
+
+def debug_response(response):
+    debug(json.dumps(response.data, indent=4, sort_keys=True))
 
 def get(account, model, id):
     u = url_and_param(model, id)
     response = hug.test.get(mastok, u["url"], params=u["params"], headers=headers(account))
-    debug(response)
+    debug_response(response)
     return response.data
 
 def test_value(account, model, id, field, value):
@@ -59,7 +61,9 @@ def test(autoroute=False):
 
             print(" - %s %s %s" % (function.__name__, args, kwargs))
             response = function(*args, **kwargs)
-            debug(response)
+            debug_response(response)
+            debug("status: %s" % response.status)
+            debug("expected status: %s" % args[0])
             assert response.status == args[0]
             return response.data
         return wrapper
@@ -199,15 +203,15 @@ def tests_mastok():
     expiry = datetime.date.today().strftime("%Y-%m-%d")
     ############################## ITEMS
     # create item
-    item11 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry})
-    item12 = create(falcon.HTTP_200, user1, "items", { "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10, "expiry": expiry})
-    item13 = create(falcon.HTTP_200, user1, "items", { "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15, "expiry": expiry})
-    create(falcon.HTTP_400, user1, "items", { "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
-    create(falcon.HTTP_401, user2, "items", { "location_id": location111["id"], "reference_id": reference111["id"], "quantity":25}) # not authorized
-    item21 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30, "expiry": expiry})
-    item22 = create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40, "expiry": expiry})
-    item23 = create(falcon.HTTP_200, user2, "items", { "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50, "expiry": expiry})
-    create(falcon.HTTP_200, user2, "items", { "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
+    item11 = create(falcon.HTTP_200, user1, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry})
+    item12 = create(falcon.HTTP_200, user1, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10, "expiry": expiry})
+    item13 = create(falcon.HTTP_200, user1, "items", { "warehouse_id": warehouse12["id"], "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15, "expiry": expiry})
+    create(falcon.HTTP_400, user1, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
+    create(falcon.HTTP_401, user2, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity":25}) # not authorized
+    item21 = create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30, "expiry": expiry})
+    item22 = create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40, "expiry": expiry})
+    item23 = create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50, "expiry": expiry})
+    create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
     test_list_update_delete(user2, user1, "items", 1, item23["id"],
         {"location_id": location212["id"], "quantity":7, "expiry": "2022-12-15"},

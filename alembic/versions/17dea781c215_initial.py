@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 19b38afb7c9d
+Revision ID: 17dea781c215
 Revises: 
-Create Date: 2020-05-30 21:33:36.315105
+Create Date: 2020-06-20 12:25:47.771417
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '19b38afb7c9d'
+revision = '17dea781c215'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -77,12 +77,14 @@ def upgrade():
     op.create_table('items',
     sa.Column('modified', sa.TIMESTAMP(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('warehouse_id', sa.Integer(), nullable=False),
     sa.Column('reference_id', sa.Integer(), nullable=True),
     sa.Column('location_id', sa.Integer(), nullable=True),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('expiry', sa.DATE(), nullable=True),
     sa.ForeignKeyConstraint(['location_id'], ['locations.id'], name=op.f('fk_items_location_id_locations')),
     sa.ForeignKeyConstraint(['reference_id'], ['references.id'], name=op.f('fk_items_reference_id_references')),
+    sa.ForeignKeyConstraint(['warehouse_id'], ['warehouses.id'], name=op.f('fk_items_warehouse_id_warehouses')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_items'))
     )
     # ### end Alembic commands ###
