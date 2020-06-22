@@ -17,10 +17,14 @@ meta = MetaData(naming_convention={
 BASE = declarative_base(metadata=meta)
 BASE.modified = Column(TIMESTAMP, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-def ManyToOne(remote_table, remote_field):
+def ManyToOne(remote_table, remote_field, delete_cascade=False):
+    if delete_cascade:
+        cascade = "all, delete-orphan"
+    else:
+        cascade = "save-update, merge"
     return relationship(remote_table,
                         backref=backref(remote_field, single_parent=True),
-                        cascade="save-update, merge, delete, delete-orphan")
+                        cascade=cascade)
 
 class User(BASE, SerializerMixin):
     __tablename__ = 'users'
@@ -28,7 +32,7 @@ class User(BASE, SerializerMixin):
     id = Column(Integer, primary_key=True)
     mail = Column(String, unique=True, nullable=False)
     api_key = Column(String(32), unique=True)
-    warehouse_aces = ManyToOne("Warehouse_ACE", "user")
+    warehouse_aces = ManyToOne("Warehouse_ACE", "user", delete_cascade=True)
 
     serialize_only = ('id', 'mail', 'api_key')
 
@@ -42,11 +46,11 @@ class Warehouse(BASE, SerializerMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
 
-    aces = ManyToOne("Warehouse_ACE", "warehouse")
-    locations = ManyToOne("Location", "warehouse")
-    references = ManyToOne("Reference", "warehouse")
-    categories = ManyToOne("Category", "warehouse")
-    items = ManyToOne("Item", "warehouse")
+    aces = ManyToOne("Warehouse_ACE", "warehouse", delete_cascade=True)
+    locations = ManyToOne("Location", "warehouse", delete_cascade=True)
+    references = ManyToOne("Reference", "warehouse", delete_cascade=True)
+    categories = ManyToOne("Category", "warehouse", delete_cascade=True)
+    items = ManyToOne("Item", "warehouse", delete_cascade=True)
 
     serialize_only = ('id', 'name')
 
@@ -90,7 +94,7 @@ class Reference(BASE, SerializerMixin):
     id = Column(Integer, primary_key=True)
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
     name = Column(String, nullable=False)
-    items = ManyToOne("Item", "reference")
+    items = ManyToOne("Item", "reference", delete_cascade=True)
     categories = relationship("Category", secondary=ReferenceCategory, backref="references")
     target_quantity = Column(Integer)
     UniqueConstraint('warehouse_id', 'name', name='uniq_reference_name')
