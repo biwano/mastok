@@ -25,6 +25,8 @@ def get_db_categories(session, user, warehouse_id, categories):
 @helpers.wraps
 def create_reference(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name, categories=None, target_quantity: fields.Int(allow_none=True)=None):
     """Creates a reference"""
+    if len(name) == 0:
+        return helpers.response.error("reference_name_mandatory", falcon.HTTP_400)
     db_categories = get_db_categories(session, user, warehouse_id, categories)
     if db_categories == None:
         return response.error("incoherent_request", falcon.HTTP_400)
@@ -42,6 +44,8 @@ def get_reference(session: helpers.extend.session, user: hug.directives.user, re
 @helpers.wraps
 def update_reference(session: helpers.extend.session, user: hug.directives.user, response, id: int, name, categories=None, target_quantity: fields.Int(allow_none=True)=None):
     """Updates a reference"""
+    if len(name) == 0:
+        return helpers.response.error("reference_name_mandatory", falcon.HTTP_400)
     db_categories = get_db_categories(session, user, session.query(Reference).get(id).warehouse_id, categories)
     if db_categories==None:
         return response.error("incoherent_request", falcon.HTTP_400)
