@@ -37,8 +37,12 @@ def delete_location(session: helpers.extend.session, user: hug.directives.user, 
 
 @hug.get('/', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def list_locations(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, request):
+def list_locations(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name=None):
     """ Lists warehouse locations """
+    def filter(warehouse):
+        query = session.query(Location).filter_by(warehouse=warehouse)
+        if name:
+            query = query.filter_by(name=name)
+        return query.all()
     return helpers.do_in_warehouse("location",
-    	queries.user_warehouse(session, user, warehouse_id),
-    	lambda warehouse: session.query(Location).filter_by(warehouse=warehouse).all())
+        queries.user_warehouse(session, user, warehouse_id),filter)

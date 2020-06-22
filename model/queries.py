@@ -42,5 +42,4 @@ def user_item(session, user, id):
     return has_warehouse(user,
         session.query(Item).\
         filter(Item.id == id).\
-        filter(Item.location_id == Location.id).\
-        filter(Location.warehouse_id == Warehouse.id))
+        filter(Item.warehouse_id == Warehouse.id))

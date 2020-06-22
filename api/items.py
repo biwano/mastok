@@ -15,7 +15,7 @@ def shared():
 
 @hug.post('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def create_item(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, location_id: int, reference_id: int, quantity: int, expiry: fields.Date(allow_none=True)=None):
+def create_item(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, reference_id: int, quantity: int, expiry: fields.Date(allow_none=True)=None, location_id: fields.Int(allow_none=True)=None):
     """Creates a location"""
     try:
         warehouse = queries.user_warehouse(session, user, warehouse_id).one()
@@ -37,7 +37,7 @@ def get_item(session: helpers.extend.session, user: hug.directives.user, respons
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, location_id: int, quantity: int, expiry: fields.Date(allow_none=True)=None):
+def update_item(session: helpers.extend.session, user: hug.directives.user, response, id: int, quantity: int, expiry: fields.Date(allow_none=True)=None, location_id: fields.Int(allow_none=True)=None):
     """Updates a item"""
     def update(item):
         if location_id:
@@ -46,6 +46,7 @@ def update_item(session: helpers.extend.session, user: hug.directives.user, resp
                 raise Exception("Incoherent request")
         return {"location_id": location_id, "quantity": quantity, "expiry": expiry}
     try:
+        print(id)
         return helpers.update("item", session, queries.user_item(session, user, id), update)
     except Exception:
         return helpers.response.error("incoherent request", falcon.HTTP_404)    

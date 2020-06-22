@@ -59,7 +59,6 @@ def list_references(session: helpers.extend.session, user: hug.directives.user, 
     """ Lists warehouse references """
     def filter(warehouse):
         query = session.query(Reference).filter_by(warehouse=warehouse)
-        print(name)
         if name:
             query = query.filter_by(name=name)
         return query.all()

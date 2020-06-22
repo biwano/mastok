@@ -28,6 +28,7 @@ def wraps(func):
             # Execute view
             res = func(*args, **kwargs)
             # Commits instance in db and serialize it
+            print(res)
             if issubclass(type(res), BASE):
                 if session is not None:
                     session.add(res)
@@ -48,7 +49,9 @@ def wraps(func):
             logger.critical("Unhandled error caught by wrapper")
             if session is not None:
                 session.rollback()
-            res = {"error": repr(exc)}
+            res = response.error(repr(exc), falcon.HTTP_500)
+            if resp:
+                resp.status = falcon.HTTP_500
         finally:
             session.close()
         return res
