@@ -1,8 +1,8 @@
-from .model import BASE, User, Warehouse, Warehouse_ACE, Location, Reference, Category, Item
+from .model import BASE, User, Warehouse, WarehouseACE, Location, Reference, Category, Item
 
 def has_warehouse(user, query):
 	return query.\
-	    filter(Warehouse.id == Warehouse_ACE.warehouse_id).\
+	    filter(Warehouse.id == WarehouseACE.warehouse_id).\
 	    filter(Warehouse_ACE.user == user)
 
 def user_warehouses(session, user):

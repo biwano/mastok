@@ -1,5 +1,6 @@
 import hug
 from . import users
+from . import auth
 from . import warehouses
 from . import locations
 from . import references
@@ -12,6 +13,10 @@ from model import SESSION
 @hug.extend_api('/users')
 def users_api():
     return [users]
+
+@hug.extend_api('/auth')
+def authentication_api():
+    return [auth]
 
 @hug.extend_api('/warehouses')
 def warehouse_api():

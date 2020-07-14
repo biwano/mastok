@@ -2,7 +2,7 @@
 import falcon
 import hug
 from sqlalchemy.orm.exc import NoResultFound
-from model import Warehouse, Warehouse_ACE, Location, queries
+from model import Warehouse, WarehouseACE, Location, queries
 from . import helpers
 
 
@@ -16,7 +16,7 @@ def shared():
 def create_warehouse(session: helpers.extend.session, user: hug.directives.user, name):
     """Creates a warehouse"""
     warehouse = Warehouse(name=name)
-    ace = Warehouse_ACE(warehouse=warehouse, user=user, role=helpers.roles.owner)
+    ace = WarehouseACE(warehouse=warehouse, user=user, role=helpers.roles.owner)
     session.add(ace)
     return warehouse
 

@@ -88,6 +88,10 @@ def delete_user(expect, account, id):
     return hug.test.delete(mastok, '/users/%s' %id, headers=headers(account))
 
 @test()
+def auth_action(expect, account, action, mail,params={}):
+    return hug.test.post(mastok, '/auth/%s/%s'%(mail, action), params=params, headers=headers(account))
+
+@test()
 def list_users(expect, account):
     return hug.test.get(mastok, '/users', headers=headers(account))
 
@@ -137,9 +141,14 @@ def tests_mastok():
     user1 = create_user(falcon.HTTP_200, "user1@mastok.com")
     user2 = create_user(falcon.HTTP_200, "user2@mastok.com")
     user3 = create_user(falcon.HTTP_200, "user3@mastok.com")
-    create_user(falcon.HTTP_400, "user2@mastok.com")
+    create_user(falcon.HTTP_400, "user2@mastok.com") # Create an existing user
     delete_user(falcon.HTTP_401, user1, user3["id"])
     delete_user(falcon.HTTP_200, admin_user, user3["id"])
+    auth_action(falcon.HTTP_200, None, "send_passcode", user1["mail"])
+    passcode = auth_action(falcon.HTTP_200, None, "set_passcode", user1["mail"])["passcode"] # getpasscode
+    user1 = auth_action(falcon.HTTP_200, None, None, user1["mail"], {"passcode": passcode}) # authenticate with passcode and get verified user api_key
+    assert(user1["is_mail_verified"])
+    
     # TODO: test get user
 
     # list users

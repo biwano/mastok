@@ -6,6 +6,9 @@ def error(message, status):
 def ok(message):
     return {"result": message}
 
+def data(message):
+    return data
+
 def list(items):
     return [item.to_dict() for item in items]
 

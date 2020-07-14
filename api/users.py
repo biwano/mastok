@@ -27,23 +27,10 @@ def create_user(session: helpers.extend.session, response, mail):
         session.query(User).filter(User.mail == mail).one()
         return helpers.response.error("user_exists", falcon.HTTP_400)
     except NoResultFound:
-        user = User(mail=mail, api_key=helpers.make_key())
+        user = User(mail=mail, api_key=helpers.make_key(), is_mail_verified=False, passcode=None)
         session.add(user)
         return user
 
-@hug.get('/by_mail/{mail}')
-@helpers.wraps
-def get_user(session: helpers.extend.session, response, mail):
-    """Creates an account"""
-    try:
-        requested_user = session.query(User).filter(User.mail == mail).one()
-        #TODO: if user has password return error
-        #helpers.authentication.authenticate_user_key()
-        user = User(mail=mail, api_key=helpers.make_key())
-        return requested_user
-        return user
-    except NoResultFound:
-        return helpers.response.error("user_not_found", falcon.HTTP_400)
 
 @hug.delete('/{id}', requires=helpers.authentication.is_admin)
 @helpers.wraps
@@ -62,3 +49,4 @@ def list_users(session: helpers.extend.session):
     """ Lists all accounts """
     users = session.query(User).all()
     return users
+

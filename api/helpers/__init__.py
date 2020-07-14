@@ -12,6 +12,7 @@ from model import SESSION, BASE
 from . import extend
 from . import authentication
 from . import response
+from . import mail
 
 
 def wraps(func):

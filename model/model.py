@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, TIMESTAMP, DATE, Table, ForeignKey, MetaData, UniqueConstraint
+from sqlalchemy import create_engine, Column, String, Integer, TIMESTAMP, DATE, Table, ForeignKey, MetaData, UniqueConstraint, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_serializer import SerializerMixin
@@ -15,6 +15,7 @@ meta = MetaData(naming_convention={
       })
 
 BASE = declarative_base(metadata=meta)
+BASE.created = Column(TIMESTAMP, default=datetime.datetime.now)
 BASE.modified = Column(TIMESTAMP, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
 def ManyToOne(remote_table, remote_field, delete_cascade=False):
@@ -26,18 +27,30 @@ def ManyToOne(remote_table, remote_field, delete_cascade=False):
                         backref=backref(remote_field, single_parent=True),
                         cascade=cascade)
 
+
 class User(BASE, SerializerMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    mail = Column(String, unique=True, nullable=False)
-    api_key = Column(String(32), unique=True)
-    warehouse_aces = ManyToOne("Warehouse_ACE", "user", delete_cascade=True)
+    mail = Column(String, nullable=False)
+    passcode = Column(String(8), nullable=True)
+    is_mail_verified = Column(Boolean())
+    warehouse_aces = ManyToOne("WarehouseACE", "user", delete_cascade=True)
+    api_keys = ManyToOne("ApiKey", "user", delete_cascade=True)
+    
+    serialize_only = ('id', 'mail', 'is_mail_verified')
 
-    serialize_only = ('id', 'mail', 'api_key')
+    UniqueConstraint('mail', name='uniq_user_mail')
+    UniqueConstraint('api_key', name='uniq_user_api_key')
 
     def __repr__(self):
         return "<User %s: %s>" % (self.id, self.mail)
+
+class ApiKey(BASE, SerializerMixin):
+    __tablename__ = 'api_keys'
+
+    id = Column(Integer, primary_key=True)
+    api_key = Column(String(32), nullable=True)    
 
 
 class Warehouse(BASE, SerializerMixin):
@@ -46,7 +59,7 @@ class Warehouse(BASE, SerializerMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
 
-    aces = ManyToOne("Warehouse_ACE", "warehouse", delete_cascade=True)
+    aces = ManyToOne("WarehouseACE", "warehouse", delete_cascade=True)
     locations = ManyToOne("Location", "warehouse", delete_cascade=True)
     references = ManyToOne("Reference", "warehouse", delete_cascade=True)
     categories = ManyToOne("Category", "warehouse", delete_cascade=True)
@@ -74,7 +87,7 @@ class Location(BASE, SerializerMixin):
         return "<Location %s of warehouse %s: %s>" % (self.id, self.warehouse_id, self.name)
 
 
-class Warehouse_ACE(BASE, SerializerMixin):
+class WarehouseACE(BASE, SerializerMixin):
     __tablename__ = 'warehouse_aces'
 
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'), primary_key=True)
