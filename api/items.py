@@ -19,10 +19,10 @@ def create_item(session: helpers.extend.session, user: hug.directives.user, resp
     """Creates a location"""
     try:
         warehouse = queries.user_warehouse(session, user, warehouse_id).one()
-        location = queries.user_location(session, user, location_id).one()
+        location = queries.user_location(session, user, location_id).one() if location_id else None
         reference = queries.user_reference(session, user, reference_id).one()
-        if warehouse.id != location.warehouse.id or warehouse.id != reference.warehouse.id:
-            return helpers.response.error("bad_location_and_or_reference", falcon.HTTP_400)
+        if warehouse.id != reference.warehouse.id or (location is not None and warehouse.id != location.warehouse.id):
+            return helpers.response.error("bad_referenece_and_or_location", falcon.HTTP_400)
         item = Item(warehouse=warehouse, location=location, reference=reference, quantity=quantity, expiry=expiry)
         return item
     except NoResultFound:
