@@ -16,6 +16,7 @@ PARENT = pathlib.Path(__file__).parent
 try:
     os.remove(PARENT / "mastok.test.db")
 except:
+    print("Cannot remove test db")
     pass
 
 debug_ = len(sys.argv) > 1
@@ -24,6 +25,7 @@ debug_ = len(sys.argv) > 1
 os.environ["MASTOK_SQL_ALCHEMY_URL"] = config.get("sqlalchemy", "url")
 stream = os.popen('alembic upgrade head')
 output = stream.read()
+print("Migrating database: ")
 print(output)
 
 def headers(user=None):
@@ -41,6 +43,7 @@ def debug_response(response):
 def get(account, model, id):
     u = url_and_param(model, id)
     response = hug.test.get(mastok, u["url"], params=u["params"], headers=headers(account))
+    debug("Response:")
     debug_response(response)
     return response.data
 
@@ -59,6 +62,7 @@ def test(autoroute=False):
                 kwargs["url"] = u["url"]
                 kwargs["params"] = u["params"]
 
+            debug("")
             print(" - %s %s %s" % (function.__name__, args, kwargs))
             response = function(*args, **kwargs)
             debug_response(response)
@@ -136,18 +140,26 @@ def tests_mastok():
     admin_api_key = admin_user["api_key"]
 
     ############################## USERS
+    user1_mail = "user1@mastok.com"
+    user2_mail = "user2@mastok.com"
+    user3_mail = "user3@mastok.com"
     # create user
     create_user(falcon.HTTP_400, "wrongemail@address")
-    user1 = create_user(falcon.HTTP_200, "user1@mastok.com")
-    user2 = create_user(falcon.HTTP_200, "user2@mastok.com")
-    user3 = create_user(falcon.HTTP_200, "user3@mastok.com")
+    create_user(falcon.HTTP_200, user1_mail)
+    create_user(falcon.HTTP_200, user2_mail)
+    create_user(falcon.HTTP_200, user3_mail)
+    user1 = auth_action(falcon.HTTP_200, None, "login", user1_mail, {})
+    user2 = auth_action(falcon.HTTP_200, None, "login", user2_mail, {})
+    user3 = auth_action(falcon.HTTP_200, None, "login", user3_mail, {})
     create_user(falcon.HTTP_400, "user2@mastok.com") # Create an existing user
     delete_user(falcon.HTTP_401, user1, user3["id"])
     delete_user(falcon.HTTP_200, admin_user, user3["id"])
-    auth_action(falcon.HTTP_200, None, "send_passcode", user1["mail"])
-    passcode = auth_action(falcon.HTTP_200, None, "set_passcode", user1["mail"])["passcode"] # getpasscode
-    user1 = auth_action(falcon.HTTP_200, None, None, user1["mail"], {"passcode": passcode}) # authenticate with passcode and get verified user api_key
+    passcode = auth_action(falcon.HTTP_200, admin_user, "set_passcode", user1["mail"])["passcode"] # getpasscode
+    auth_action(falcon.HTTP_401, None, "login", user1["mail"], {"passcode": "wrongpasscode"}) # authenticate with wrongpasscode
+    user1 = auth_action(falcon.HTTP_200, None, "login", user1["mail"], {"passcode": passcode}) # authenticate with passcode and get verified user api_key
     assert(user1["is_mail_verified"])
+    auth_action(falcon.HTTP_401, None, "login", user1["mail"], {"passcode": passcode}) # try to consume passcode twice
+    auth_action(falcon.HTTP_401, None, "login", user1["mail"], {"api_key": "wrongapikey"}) # try to     uthenticate with wrong api_key
     
     # TODO: test get user
 

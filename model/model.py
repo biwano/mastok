@@ -34,14 +34,13 @@ class User(BASE, SerializerMixin):
     id = Column(Integer, primary_key=True)
     mail = Column(String, nullable=False)
     passcode = Column(String(8), nullable=True)
-    is_mail_verified = Column(Boolean())
+    is_mail_verified = Column(Boolean(create_constraint=False))
     warehouse_aces = ManyToOne("WarehouseACE", "user", delete_cascade=True)
     api_keys = ManyToOne("ApiKey", "user", delete_cascade=True)
-    
+
     serialize_only = ('id', 'mail', 'is_mail_verified')
 
     UniqueConstraint('mail', name='uniq_user_mail')
-    UniqueConstraint('api_key', name='uniq_user_api_key')
 
     def __repr__(self):
         return "<User %s: %s>" % (self.id, self.mail)
@@ -50,6 +49,7 @@ class ApiKey(BASE, SerializerMixin):
     __tablename__ = 'api_keys'
 
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
     api_key = Column(String(32), nullable=True)    
 
 

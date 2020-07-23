@@ -27,7 +27,7 @@ def create_user(session: helpers.extend.session, response, mail):
         session.query(User).filter(User.mail == mail).one()
         return helpers.response.error("user_exists", falcon.HTTP_400)
     except NoResultFound:
-        user = User(mail=mail, api_key=helpers.make_key(), is_mail_verified=False, passcode=None)
+        user = User(mail=mail, is_mail_verified=False, passcode=None)
         session.add(user)
         return user
 

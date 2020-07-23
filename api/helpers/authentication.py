@@ -2,15 +2,16 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import traceback
 import logger
 import hug
-from model import SESSION, User
+from model import SESSION, User, ApiKey
 import config
 
 
 def authenticate_user_key(api_key, context):
     try:
         session = SESSION()
-        user = session.query(User).filter(User.api_key == api_key).one()
+        api_key = session.query(ApiKey).filter_by(api_key=api_key).one()
         logger.debug("Authenticated user with key: %s" % api_key)
+        user = api_key.user
         session.close()
         return user
     except MultipleResultsFound:

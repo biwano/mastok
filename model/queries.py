@@ -3,7 +3,7 @@ from .model import BASE, User, Warehouse, WarehouseACE, Location, Reference, Cat
 def has_warehouse(user, query):
 	return query.\
 	    filter(Warehouse.id == WarehouseACE.warehouse_id).\
-	    filter(Warehouse_ACE.user == user)
+	    filter(WarehouseACE.user == user)
 
 def user_warehouses(session, user):
 	return has_warehouse(user, session.query(Warehouse))
