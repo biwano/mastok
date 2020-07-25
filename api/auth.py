@@ -60,7 +60,7 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
             return user_with_key(requested_user, new_key)
         # Everything failed
         return helpers.response.error("Auhentication required", falcon.HTTP_401)
-        
+
     except NoResultFound:
         return helpers.response.error("user_not_found", falcon.HTTP_400)
 
@@ -69,14 +69,9 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
 def send_passcode(session: helpers.extend.session, response, mail, test=False):
     """Send a verification mail """
     passcode = set_user_passcode(session, mail)
-    print(passcode)
-    #helpers.mail.from_template(mail, "verify_mail", body_params={"passcode": passcode}, test=test)
-    return helpers.response.ok("mail_sent")
-    
-@hug.post('/{mail}/set_passcode', requires=helpers.authentication.is_admin)
-@helpers.wraps
-def set_passcode(session: helpers.extend.session, response, mail, test=False):
-    """Sets the passcode of a user - same as send_passcode but returns the passcode in the response instead of sending a mail for testing purpose  - """
-    passcode = set_user_passcode(session, mail)
-    return {"passcode": passcode}
-    
+    if config.get("auth", "passcode_delivery") == "test":
+        print(passcode)
+        return {"passcode": passcode}
+    else:
+        helpers.mail.from_template(mail, "verify_mail", body_params={"passcode": passcode}, test=test)
+        return helpers.response.ok("mail_sent")

@@ -154,7 +154,7 @@ def tests_mastok():
     create_user(falcon.HTTP_400, "user2@mastok.com") # Create an existing user
     delete_user(falcon.HTTP_401, user1, user3["id"])
     delete_user(falcon.HTTP_200, admin_user, user3["id"])
-    passcode = auth_action(falcon.HTTP_200, admin_user, "set_passcode", user1["mail"])["passcode"] # getpasscode
+    passcode = auth_action(falcon.HTTP_200, admin_user, "send_passcode", user1["mail"])["passcode"] # getpasscode
     auth_action(falcon.HTTP_401, None, "login", user1["mail"], {"passcode": "wrongpasscode"}) # authenticate with wrongpasscode
     user1 = auth_action(falcon.HTTP_200, None, "login", user1["mail"], {"passcode": passcode}) # authenticate with passcode and get verified user api_key
     assert(user1["is_mail_verified"])
