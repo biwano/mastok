@@ -222,19 +222,19 @@ def tests_mastok():
     test_list_update_delete(user2, user1, "references", 3, reference213["id"], {"name":'This was My seventh reference', "target_quantity": 15}, params={"warehouse_id": warehouse21["id"]})
 
     expiry = datetime.date.today().strftime("%Y-%m-%d")
-    ############################## ITEMS
-    # create item
-    item11 = create(falcon.HTTP_200, user1, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry})
-    item12 = create(falcon.HTTP_200, user1, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10, "expiry": expiry})
-    item13 = create(falcon.HTTP_200, user1, "items", { "warehouse_id": warehouse12["id"], "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15, "expiry": expiry})
-    create(falcon.HTTP_400, user1, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
-    create(falcon.HTTP_401, user2, "items", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity":25}) # not authorized
-    item21 = create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30, "expiry": expiry})
-    item22 = create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40, "expiry": expiry})
-    item23 = create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50, "expiry": expiry})
-    create(falcon.HTTP_200, user2, "items", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
+    ############################## articleS
+    # create article
+    article11 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry})
+    article12 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10, "expiry": expiry})
+    article13 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse12["id"], "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15, "expiry": expiry})
+    create(falcon.HTTP_400, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
+    create(falcon.HTTP_401, user2, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity":25}) # not authorized
+    article21 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30, "expiry": expiry})
+    article22 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40, "expiry": expiry})
+    article23 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50, "expiry": expiry})
+    create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
-    test_list_update_delete(user2, user1, "items", 1, item23["id"],
+    test_list_update_delete(user2, user1, "articles", 1, article23["id"],
         {"location_id": location212["id"], "quantity":7, "expiry": "2022-12-15"},
         {"location_id": location212["id"]})
     

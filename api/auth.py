@@ -2,7 +2,6 @@
 import falcon
 import hug
 import smtplib
-import re
 import random
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from model import User, ApiKey
@@ -25,6 +24,8 @@ def set_user_passcode(session, mail):
 @helpers.wraps
 def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None, api_key=None):
     """Authenticates a user by email and passcode"""
+    if not helpers.is_mail(mail):
+        return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
     try:
         query = session.query(User).filter(User.mail == mail)
         requested_user = query.one()
@@ -68,6 +69,8 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
 @helpers.wraps
 def send_passcode(session: helpers.extend.session, response, mail, test=False):
     """Send a verification mail """
+    if not helpers.is_mail(mail):
+        return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
     passcode = set_user_passcode(session, mail)
     if config.get("auth", "passcode_delivery") == "test":
         print(passcode)

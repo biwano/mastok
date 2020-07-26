@@ -63,7 +63,7 @@ class Warehouse(BASE, SerializerMixin):
     locations = ManyToOne("Location", "warehouse", delete_cascade=True)
     references = ManyToOne("Reference", "warehouse", delete_cascade=True)
     categories = ManyToOne("Category", "warehouse", delete_cascade=True)
-    items = ManyToOne("Item", "warehouse", delete_cascade=True)
+    articles = ManyToOne("Article", "warehouse", delete_cascade=True)
 
     serialize_only = ('id', 'name')
 
@@ -78,7 +78,7 @@ class Location(BASE, SerializerMixin):
     name = Column(String, nullable=False)
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
 
-    items = ManyToOne("Item", "location")
+    articles = ManyToOne("Article", "location")
 
     serialize_only = ('id', 'name', 'warehouse_id')
     UniqueConstraint('warehouse_id', 'name', name='uniq_location_name')
@@ -107,7 +107,7 @@ class Reference(BASE, SerializerMixin):
     id = Column(Integer, primary_key=True)
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
     name = Column(String, nullable=False)
-    items = ManyToOne("Item", "reference", delete_cascade=True)
+    articles = ManyToOne("Article", "reference", delete_cascade=True)
     categories = relationship("Category", secondary=ReferenceCategory, backref="references")
     target_quantity = Column(Integer)
     UniqueConstraint('warehouse_id', 'name', name='uniq_reference_name')
@@ -134,8 +134,8 @@ class Category(BASE, SerializerMixin):
 
 
 
-class Item(BASE, SerializerMixin):
-    __tablename__ = 'items'
+class Article(BASE, SerializerMixin):
+    __tablename__ = 'articles'
 
     id = Column(Integer, primary_key=True)
     warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
@@ -148,5 +148,5 @@ class Item(BASE, SerializerMixin):
         'reference.name', 'location.name', 'warehouse.name')
 
     def __repr__(self):
-        return "<Item %s in location %s>" % (self.reference_id, self.location_id)
+        return "<Article %s in location %s>" % (self.reference_id, self.location_id)
 

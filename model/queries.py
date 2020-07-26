@@ -1,4 +1,4 @@
-from .model import BASE, User, Warehouse, WarehouseACE, Location, Reference, Category, Item
+from .model import BASE, User, Warehouse, WarehouseACE, Location, Reference, Category, Article
 
 def has_warehouse(user, query):
 	return query.\
@@ -38,8 +38,8 @@ def warehouse_categories(session, user, warehouse_id, ids):
 		filter(Category.id.in_(ids)).\
 	    filter(Category.warehouse_id == warehouse_id))
 
-def user_item(session, user, id):
+def user_article(session, user, id):
     return has_warehouse(user,
-        session.query(Item).\
-        filter(Item.id == id).\
-        filter(Item.warehouse_id == Warehouse.id))
+        session.query(Article).\
+        filter(Article.id == id).\
+        filter(Article.warehouse_id == Warehouse.id))

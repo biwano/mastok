@@ -5,6 +5,7 @@ import uuid
 import logger
 import falcon
 import hug
+import re
 from contextlib import contextmanager
 from sqlalchemy.orm.exc import NoResultFound
 import config
@@ -105,7 +106,10 @@ def make_key():
     """ Creates a 64 hexadecimel key """
     return uuid.uuid1().hex
 
-
+def is_mail(mail):
+    matchObj = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", mail, flags=0)
+    return matchObj is not None
+    
 class roles():
     """ provides static fields for roles definition """
     owner = "owner"

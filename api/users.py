@@ -6,9 +6,7 @@ from model import User
 from . import helpers
 import re
 
-def is_mail(mail):
-    matchObj = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", mail, flags=0)
-    return matchObj is not None
+
 
 @hug.extend_api()
 def shared():
@@ -21,7 +19,7 @@ def create_user(session: helpers.extend.session, response, mail):
     """Creates an account"""
     if len(mail) == 0:
         return helpers.response.error("user_mail_empty", falcon.HTTP_400)
-    if not is_mail(mail):
+    if not helpers.is_mail(mail):
         return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
     try:
         session.query(User).filter(User.mail == mail).one()
