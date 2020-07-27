@@ -1,7 +1,10 @@
-def error(message, status):
-    return {"error": message,
+def error(message, status, details=None):
+    res =  {"error": message,
             "status": status
     }
+    if details:
+        res.update({ 'details': details})
+    return res
 
 def ok(message):
     return {"result": message}

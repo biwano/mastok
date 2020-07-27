@@ -6,6 +6,7 @@ from . import locations
 from . import references
 from . import categories
 from . import articles
+from . import tags
 from model import SESSION
 
 
@@ -38,3 +39,7 @@ def categories_api():
 @hug.extend_api('/articles')
 def articles_api():
     return [articles]
+
+@hug.extend_api('/tags')
+def tags_api():
+    return [tags]

@@ -126,6 +126,7 @@ def test_list_update_delete(owner, faker, model, nb, id, payload, params=None):
     update(falcon.HTTP_401, faker, model, id, payload)
     thing = get(owner, model, id)
     for key in payload:
+        print("Testing %s[%s] = %s (actual value is:%s)" % (model, key, payload[key], thing[key]))
         assert(thing[key] == payload[key])
 
 
@@ -221,10 +222,22 @@ def tests_mastok():
 
     test_list_update_delete(user2, user1, "references", 3, reference213["id"], {"name":'This was My seventh reference', "target_quantity": 15}, params={"warehouse_id": warehouse21["id"]})
 
+    ############################## REFERENCES
+    # create tags
+    tag111 = create(falcon.HTTP_200, user1, "tags", {"warehouse_id": warehouse11["id"], "name": "My first tag"})
+    tag112 = create(falcon.HTTP_200, user1, "tags", {"warehouse_id": warehouse11["id"], "name": "My second tag"})
+    tag113 = create(falcon.HTTP_200, user1, "tags", {"warehouse_id": warehouse11["id"], "name": "My second tag bis"})
+    tag121 = create(falcon.HTTP_200, user1, "tags", {"warehouse_id": warehouse12["id"], "name": "My third tag"})
+    create(falcon.HTTP_401, user2, "tags", {"warehouse_id": warehouse12["id"], "name": "My fourth tag"})
+    tag211 = create(falcon.HTTP_200, user2, "tags", {"warehouse_id": warehouse21["id"], "name": "My fifth tag"})
+    tag212 = create(falcon.HTTP_200, user2, "tags", {"warehouse_id": warehouse21["id"], "name": "My sixth tag"})
+    tag213 = create(falcon.HTTP_200, user2, "tags", {"warehouse_id": warehouse21["id"], "name": "My seventh tag"})
+
+
+    ##############################  ARTICLES
     expiry = datetime.date.today().strftime("%Y-%m-%d")
-    ############################## articleS
     # create article
-    article11 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry})
+    article11 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference111["id"], "quantity": 5, "expiry": expiry, "tags": [tag111["id"], tag112["id"]]})
     article12 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference112["id"], "quantity":10, "expiry": expiry})
     article13 = create(falcon.HTTP_200, user1, "articles", { "warehouse_id": warehouse12["id"], "location_id": location121["id"], "reference_id": reference121["id"], "quantity":15, "expiry": expiry})
     create(falcon.HTTP_400, user1, "articles", { "warehouse_id": warehouse11["id"], "location_id": location111["id"], "reference_id": reference121["id"], "quantity":20}) # reference and location not in same warehouse
@@ -235,7 +248,7 @@ def tests_mastok():
     create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
     test_list_update_delete(user2, user1, "articles", 1, article23["id"],
-        {"location_id": location212["id"], "quantity":7, "expiry": "2022-12-15"},
+        {"location_id": location212["id"], "quantity":7, "expiry": "2022-12-15", "tags": [tag213]},
         {"location_id": location212["id"]})
     
 

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, Column, String, Integer, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 import config
-from .model import BASE, User, ApiKey, Warehouse, WarehouseACE, Location, Reference, Category, Article
+from .model import BASE, User, ApiKey, Warehouse, WarehouseACE, Location, Reference, Category, Article, Tag
 from . import queries
 
 ENGINE = create_engine(config.get("sqlalchemy", "url"), 
