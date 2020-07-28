@@ -162,7 +162,7 @@ class Tag(BASE, SerializerMixin):
     name = Column(String, nullable=False)
     UniqueConstraint('warehouse_id', 'name', name='uniq_category_name')
 
-    serialize_only = ('id', 'name')
+    serialize_only = ('id', 'warehouse_id', 'name')
 
     def __repr__(self):
         return "<Tag %s of Warehouse %s: %s>" % (self.id, self.warehouse_id, self.name)
