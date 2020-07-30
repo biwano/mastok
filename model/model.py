@@ -148,7 +148,7 @@ class Article(BASE, SerializerMixin):
     expiry = Column(DATE)
     tags = relationship("Tag", secondary=ArticleTag, backref="articles")
 
-    serialize_only = ('id', 'warehouse_id', 'reference_id', 'location_id', 'quantity', 'expiry',
+    serialize_only = ('id', 'warehouse_id', 'reference_id', 'location_id', 'location.warehouse_id', 'quantity', 'expiry',
         'reference.name', 'location.name', 'warehouse.name', 'tags.id', 'tags.warehouse_id', 'tags.name')
 
     def __repr__(self):
