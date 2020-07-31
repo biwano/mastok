@@ -30,7 +30,6 @@ def wraps(func):
             # Execute view
             res = func(*args, **kwargs)
             # Commits instance in db and serialize it
-            print(res)
             if issubclass(type(res), BASE):
                 if session is not None:
                     session.add(res)

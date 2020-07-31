@@ -15,11 +15,11 @@ Mastok
 	}
 
 }
-MAIL_PAYLOAD_TEMPLATE = """
-From: {mail_from}
-To: {mail_to}
-Subject: {mail_subject}
-
+MAIL_PAYLOAD_TEMPLATE = """\
+From: {mail_from}\r\n\
+To: {mail_to}\r\n\
+Subject: {mail_subject}\r\n\
+\r\n\
 {mail_body}
 """
 

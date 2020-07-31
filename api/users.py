@@ -1,6 +1,7 @@
 """ part of the API managing users """
 import falcon
 import hug
+import config
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from model import User
 from . import helpers
@@ -15,8 +16,10 @@ def shared():
 
 @hug.post('/')
 @helpers.wraps
-def create_user(session: helpers.extend.session, response, mail):
+def create_user(session: helpers.extend.session, response, mail, captcha=None):
     """Creates an account"""
+    if not helpers.authentication.check_captcha(captcha):
+        return helpers.response.error("captcha_verification_failure", falcon.HTTP_400)
     if len(mail) == 0:
         return helpers.response.error("user_mail_empty", falcon.HTTP_400)
     if not helpers.is_mail(mail):

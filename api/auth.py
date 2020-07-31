@@ -22,7 +22,7 @@ def set_user_passcode(session, mail):
 
 @hug.post('/{mail}/login')
 @helpers.wraps
-def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None, api_key=None):
+def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None, captcha=None, api_key=None):
     """Authenticates a user by email and passcode"""
     if not helpers.is_mail(mail):
         return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
@@ -32,11 +32,14 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
         new_key = helpers.make_key()
         # Standard api_key authorization
         if api_key:
-            if list(filter(lambda x: x.api_key==api_key, requested_user.api_keys)):
+            if list(filter(lambda x: x.api_key == api_key, requested_user.api_keys)):
                 return user_with_key(requested_user, api_key)
             return helpers.response.error("API key authentication_failed", falcon.HTTP_401)
         # Passcode verification
         elif passcode: 
+            # Check captcha
+            if not helpers.authentication.check_captcha(captcha):
+                return helpers.response.error("captcha_verification_failure", falcon.HTTP_400)
             if requested_user.passcode == passcode:
                 # Consume passcode
                 requested_user.passcode = None
@@ -67,12 +70,15 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
 
 @hug.post('/{mail}/send_passcode')
 @helpers.wraps
-def send_passcode(session: helpers.extend.session, response, mail, test=False):
+def send_passcode(session: helpers.extend.session, response, mail, captcha=None, test=False):
+    is_passcode_json = config.get("auth", "passcode_delivery") == "json"
+    if not helpers.authentication.check_captcha(captcha):
+        return helpers.response.error("captcha_verification_failure", falcon.HTTP_400)
     """Send a verification mail """
     if not helpers.is_mail(mail):
         return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
     passcode = set_user_passcode(session, mail)
-    if config.get("auth", "passcode_delivery") == "test":
+    if is_passcode_json:
         print(passcode)
         return {"passcode": passcode}
     else:
