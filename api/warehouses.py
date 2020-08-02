@@ -15,6 +15,7 @@ def shared():
 @helpers.wraps
 def create_warehouse(session: helpers.extend.session, user: hug.directives.user, name):
     """Creates a warehouse"""
+    helpers.sleep(5)
     warehouse = Warehouse(name=name)
     ace = WarehouseACE(warehouse=warehouse, user=user, role=helpers.roles.owner)
     session.add(ace)

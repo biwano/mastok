@@ -33,7 +33,7 @@ def check_admin_key(api_key):
 
 def check_captcha(captcha):
     """Authenticate a googlae captcha v23 token"""
-    if config.get("auth", "captcha") == "bypass":
+    if config.get("auth", "captcha") == "disabled":
         return True
     data = {
         "secret": config.get("recaptchav3", "secret"),

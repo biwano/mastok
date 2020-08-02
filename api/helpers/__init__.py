@@ -1,15 +1,12 @@
 """ Provides helpers from views """
 import traceback
-import inspect
 import uuid
 import logger
 import falcon
 import hug
 import re
-from contextlib import contextmanager
 from sqlalchemy.orm.exc import NoResultFound
-import config
-from model import SESSION, BASE
+from model import BASE
 from . import extend
 from . import authentication
 from . import response
@@ -113,3 +110,7 @@ class roles():
     """ provides static fields for roles definition """
     owner = "owner"
     admin = "admin"
+
+def sleep(num):
+    import time
+    time.sleep(num)

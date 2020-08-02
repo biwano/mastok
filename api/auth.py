@@ -79,6 +79,7 @@ def send_passcode(session: helpers.extend.session, response, mail, captcha=None,
         return helpers.response.error("user_mail_invalid", falcon.HTTP_400)
     passcode = set_user_passcode(session, mail)
     if is_passcode_json:
+        helpers.sleep(1)
         print(passcode)
         return {"passcode": passcode}
     else:

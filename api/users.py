@@ -1,13 +1,9 @@
 """ part of the API managing users """
 import falcon
 import hug
-import config
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 from model import User
 from . import helpers
-import re
-
-
 
 @hug.extend_api()
 def shared():
