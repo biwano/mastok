@@ -16,26 +16,26 @@ def shared():
 def create_category(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name):
     """Creates a category"""
     return helpers.do_in_warehouse("category",
-    	queries.user_warehouse(session, user, warehouse_id),
+    	queries.with_editor_role(queries.user_warehouse(session, user, warehouse_id)),
     	lambda warehouse: Category(warehouse=warehouse, name=name))
 
 @hug.get('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def get_category(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Gets a category"""
-    return helpers.get("category", session, queries.user_category(session, user, id))
+    return helpers.get("category", session, queries.with_viewer_role(queries.user_category(session, user, id)))
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def update_category(session: helpers.extend.session, user: hug.directives.user, response, id: int, name):
     """Updates a category"""
-    return helpers.update("category", session, queries.user_category(session, user, id), {"name": name})
+    return helpers.update("category", session, queries.with_editor_role(queries.user_category(session, user, id)), {"name": name})
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def delete_category(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a category"""
-    return helpers.delete("category", session, queries.user_category(session, user, id))
+    return queries.with_editor_role(helpers.delete("category", session, queries.user_category(session, user, id)))
 
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -48,4 +48,4 @@ def list_categories(session: helpers.extend.session, user: hug.directives.user, 
             query = query.filter_by(name=name)
         return query.all()
     return helpers.do_in_warehouse("category",
-    	queries.user_warehouse(session, user, warehouse_id),filter)
+    	queries.with_viewer_role(queries.user_warehouse(session, user, warehouse_id)),filter)

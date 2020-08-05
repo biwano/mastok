@@ -22,14 +22,14 @@ def create_reference(session: helpers.extend.session, user: hug.directives.user,
     if db_categories == None:
         return response.error("invalid_category_ids", falcon.HTTP_400)
     return helpers.do_in_warehouse("reference",
-    	queries.user_warehouse(session, user, warehouse_id),
+    	queries.with_editor_role(queries.user_warehouse(session, user, warehouse_id)),
     	lambda warehouse: Reference(warehouse=warehouse, name=name, categories=db_categories, target_quantity=target_quantity))
 
 @hug.get('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def get_reference(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Gets a reference"""
-    return helpers.get("reference", session, queries.user_reference(session, user, id))
+    return helpers.get("reference", session, queries.with_viewer_role(queries.user_reference(session, user, id)))
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -40,13 +40,13 @@ def update_reference(session: helpers.extend.session, user: hug.directives.user,
     db_categories = queries.get_categories_from_ids(session, user, session.query(Reference).get(id).warehouse_id, categories)
     if db_categories == None:
         return response.error("invalid_category_ids", falcon.HTTP_400)
-    return helpers.update("reference", session, queries.user_reference(session, user, id), {"name": name, "categories":db_categories, "target_quantity": target_quantity })
+    return helpers.update("reference", session, queries.with_editor_role(queries.user_reference(session, user, id)), {"name": name, "categories":db_categories, "target_quantity": target_quantity })
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def delete_reference(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a reference"""
-    return helpers.delete("reference", session, queries.user_reference(session, user, id))
+    return helpers.delete("reference", session, queries.with_editor_role(queries.user_reference(session, user, id)))
 
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -58,4 +58,4 @@ def list_references(session: helpers.extend.session, user: hug.directives.user, 
             query = query.filter_by(name=name)
         return query.all()
     return helpers.do_in_warehouse("reference",
-    	queries.user_warehouse(session, user, warehouse_id),filter)
+    	queries.with_viewer_role(queries.user_warehouse(session, user, warehouse_id)), filter)

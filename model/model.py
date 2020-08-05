@@ -98,6 +98,13 @@ class WarehouseACE(BASE, SerializerMixin):
     def __repr__(self):
         return "<User %s is %s of Warehouse %s: %s>" % (self.user_id, self.role, self.warehouse_id, self.name)
 
+class roles():
+    """ provides static fields for roles definition """
+    owner = "owner"
+    admin = "admin"
+    editor = "editor"
+    viewer = "viewer"
+
 ReferenceCategory = Table('ReferenceCategory', BASE.metadata,
     Column('reference_id', Integer, ForeignKey('references.id'), primary_key=True),
     Column('category_id', Integer, ForeignKey('categories.id'), primary_key=True))

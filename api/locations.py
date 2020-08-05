@@ -17,14 +17,14 @@ def create_location(session: helpers.extend.session, user: hug.directives.user, 
     if len(name) == 0:
         return helpers.response.error("location_name_mandatory", falcon.HTTP_400)
     return helpers.do_in_warehouse("location",
-    	queries.user_warehouse(session, user, warehouse_id),
+    	queries.with_editor_role(queries.user_warehouse(session, user, warehouse_id)),
     	lambda warehouse: Location(warehouse=warehouse, name=name))
 
 @hug.get('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def get_location(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Gets a location"""
-    return helpers.get("location", session, queries.user_location(session, user, id))
+    return helpers.get("location", session, queries.with_viewer_role(queries.user_location(session, user, id)))
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -32,13 +32,13 @@ def update_location(session: helpers.extend.session, user: hug.directives.user, 
     """Updates a location"""
     if len(name) == 0:
         return helpers.response.error("location_name_mandatory", falcon.HTTP_400)
-    return helpers.update("location", session, queries.user_location(session, user, id), {"name": name})
+    return helpers.update("location", session, queries.with_editor_role(queries.user_location(session, user, id)), {"name": name})
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def delete_location(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a location"""
-    return helpers.delete("location", session, queries.user_location(session, user, id))
+    return helpers.delete("location", session, queries.with_editor_role(queries.user_location(session, user, id)))
 
 @hug.get('/', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -50,4 +50,4 @@ def list_locations(session: helpers.extend.session, user: hug.directives.user, r
             query = query.filter_by(name=name)
         return query.all()
     return helpers.do_in_warehouse("location",
-        queries.user_warehouse(session, user, warehouse_id),filter)
+        queries.with_viewer_role(queries.user_warehouse(session, user, warehouse_id)),filter)

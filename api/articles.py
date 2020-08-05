@@ -21,9 +21,9 @@ def create_article(session: helpers.extend.session, user: hug.directives.user, r
     if db_tags == None:
         return response.error("invalid_tag_ids", falcon.HTTP_400)
     try:
-        warehouse = queries.user_warehouse(session, user, warehouse_id).one()
-        location = queries.user_location(session, user, location_id).one() if location_id else None
-        reference = queries.user_reference(session, user, reference_id).one()
+        warehouse = queries.with_editor_role(queries.user_warehouse(session, user, warehouse_id).one())
+        location = queries.with_editor_role(queries.user_location(session, user, location_id).one()) if location_id else None
+        reference = queries.with_editor_role(queries.user_reference(session, user, reference_id).one())
         if warehouse.id != reference.warehouse.id or (location is not None and warehouse.id != location.warehouse.id):
             return helpers.response.error("bad_referenece_and_or_location", falcon.HTTP_400)
         article = Article(warehouse=warehouse, location=location, reference=reference, quantity=quantity, expiry=expiry, tags=db_tags)
@@ -35,7 +35,7 @@ def create_article(session: helpers.extend.session, user: hug.directives.user, r
 @helpers.wraps
 def get_article(session: helpers.extend.session, user: hug.directives.user, response, id: int=None):
     """Gets a article"""
-    return helpers.get("article", session, queries.user_article(session, user, id))
+    return helpers.get("article", session, queries.with_viewer_role(queries.user_article(session, user, id)))
 
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
@@ -53,7 +53,7 @@ def update_article(session: helpers.extend.session, user: hug.directives.user, r
         return {"location_id": location_id, "quantity": quantity, "expiry": expiry, "tags": db_tags}
     try:
         print(id)
-        return helpers.update("article", session, queries.user_article(session, user, id), update)
+        return helpers.update("article", session, queries.with_editor_role(queries.user_article(session, user, id)), update)
     except Exception as e:
         return helpers.response.error(e.__str__(), falcon.HTTP_404)    
 
@@ -61,21 +61,15 @@ def update_article(session: helpers.extend.session, user: hug.directives.user, r
 @helpers.wraps
 def delete_article(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a article"""
-    return helpers.delete("article", session, queries.user_article(session, user, id))
+    return helpers.delete("article", session, queries.with_editor_role(queries.user_article(session, user, id)))
 
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
-def list_articles(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int=None, location_id: int=None):
+def list_articles(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int=None):
     """ Lists warehouse locations """
-    if location_id is not None:
-        """ Lists location articles """
-        return helpers.do_in_location("article",
-            queries.user_location(session, user, location_id),
-            lambda location: session.query(Article).filter_by(location=location).all())
-    elif warehouse_id is not None:
-        """ Lists location articles """
+    if warehouse_id is not None:
         return helpers.do_in_warehouse("article",
-            queries.user_warehouse(session, user, warehouse_id),
+            queries.with_viewer_role(queries.user_warehouse(session, user, warehouse_id)),
             lambda warehouse: session.query(Article).filter_by(warehouse=warehouse).all())
     else:
         return response.error("no_location_or_warehouse_specified", falcon.HTTP_400)

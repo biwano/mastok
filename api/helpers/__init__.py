@@ -105,11 +105,7 @@ def make_key():
 def is_mail(mail):
     matchObj = re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", mail, flags=0)
     return matchObj is not None
-    
-class roles():
-    """ provides static fields for roles definition """
-    owner = "owner"
-    admin = "admin"
+
 
 def sleep(num):
     import time

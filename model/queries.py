@@ -1,15 +1,33 @@
-from .model import BASE, User, Warehouse, WarehouseACE, Location, Reference, Category, Article, Tag
+from sqlalchemy import or_
+from .model import BASE, User, Warehouse, WarehouseACE, Location, Reference, Category, Article, Tag, roles
 
 def has_warehouse(user, query):
 	return query.\
 	    filter(Warehouse.id == WarehouseACE.warehouse_id).\
 	    filter(WarehouseACE.user == user)
 
+def with_role(query, roles):
+    if not type(roles) == list:
+        roles = [roles]
+    return query.filter(WarehouseACE.role.in_(roles))
+
 def user_warehouses(session, user):
 	return has_warehouse(user, session.query(Warehouse))
 
 def user_warehouse(session, user, id):
 	return user_warehouses(session, user).filter(Warehouse.id == id)
+
+def with_viewer_role(query):
+    return with_role(query, [roles.owner, roles.admin, roles.editor, roles.viewer])
+
+def with_editor_role(query):
+    return with_role(query, [roles.owner, roles.admin, roles.editor])
+
+def with_admin_role(query):
+    return with_role(query, [roles.owner, roles.admin])
+
+def with_owner_role(query):
+    return with_role(query, [roles.owner, roles.admin])
 
 def user_warehouse_thing(session, user, Thing, id):
 	return has_warehouse(user,
