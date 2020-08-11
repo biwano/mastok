@@ -25,7 +25,10 @@ Subject: {mail_subject}\r\n\
 
 def from_template(mail_to, name, subject_params={}, body_params={}, test=False):
     """Send Creates an account"""
-    mail_from = config.get("smtp", "from") if not test else ""
+    if not test:
+        mail_from = config.get("smtp", "from")  
+    else:
+        mail_from = ""
     mail_subject = MAIL_TEMPLATES[name]["subject"].format(**subject_params)
     mail_body = MAIL_TEMPLATES[name]["body"].format(**body_params)
     mail_payload = MAIL_PAYLOAD_TEMPLATE.format(
