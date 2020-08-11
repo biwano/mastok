@@ -16,26 +16,26 @@ def shared():
 def create_tag(session: helpers.extend.session, user: hug.directives.user, response, warehouse_id: int, name):
     """Creates a tag"""
     return helpers.do_in_warehouse("tag",
-    	queries.user_warehouse(session, user, warehouse_id),
+    	queries.with_editor_role(queries.user_warehouse(session, user, warehouse_id)),
     	lambda warehouse: Tag(warehouse=warehouse, name=name))
 
 @hug.get('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def get_tag(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Gets a tag"""
-    return helpers.get("tag", session, queries.user_tag(session, user, id))
+    return helpers.get("tag", session, queries.with_viewer_role(queries.user_tag(session, user, id)))
 
 @hug.put('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def update_tag(session: helpers.extend.session, user: hug.directives.user, response, id: int, name):
     """Updates a tag"""
-    return helpers.update("tag", session, queries.user_tag(session, user, id), {"name": name})
+    return helpers.update("tag", session, queries.with_editor_role(queries.user_tag(session, user, id)), {"name": name})
 
 @hug.delete('/{id}', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
 def delete_tag(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a tag"""
-    return helpers.delete("tag", session, queries.user_tag(session, user, id))
+    return helpers.delete("tag", session, queries.with_editor_role(queries.user_tag(session, user, id)))
 
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps
@@ -48,4 +48,4 @@ def list_tags(session: helpers.extend.session, user: hug.directives.user, respon
             query = query.filter_by(name=name)
         return query.all()
     return helpers.do_in_warehouse("tag",
-    	queries.user_warehouse(session, user, warehouse_id),filter)
+    	queries.with_viewer_role(queries.user_warehouse(session, user, warehouse_id)),filter)

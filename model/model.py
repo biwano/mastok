@@ -58,6 +58,7 @@ class Warehouse(BASE, SerializerMixin):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
+    settings = Column(String)
 
     aces = ManyToOne("WarehouseACE", "warehouse", delete_cascade=True)
     locations = ManyToOne("Location", "warehouse", delete_cascade=True)
@@ -165,7 +166,7 @@ class Tag(BASE, SerializerMixin):
     __tablename__ = 'tags'
 
     id = Column(Integer, primary_key=True)
-    warehouse_id = Column(Integer, ForeignKey('warehouses.id'))
+    warehouse_id = Column(Integer, ForeignKey('warehouses.id'), nullable=False)
     name = Column(String, nullable=False)
     UniqueConstraint('warehouse_id', 'name', name='uniq_category_name')
 

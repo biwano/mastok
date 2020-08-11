@@ -47,6 +47,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True
     )
 
     with context.begin_transaction():
@@ -63,17 +64,16 @@ def run_migrations_online():
     url = os.environ.get("MASTOK_SQL_ALCHEMY_URL")
     if url is not None:
         config.set_main_option("sqlalchemy.url", url)
-    print(url)
     
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata,
+            render_as_batch=True
         )
 
         with context.begin_transaction():
@@ -83,4 +83,5 @@ def run_migrations_online():
 if context.is_offline_mode():
     run_migrations_offline()
 else:
+    print("a-------------------------")
     run_migrations_online()

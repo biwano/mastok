@@ -35,7 +35,7 @@ def update_category(session: helpers.extend.session, user: hug.directives.user, 
 @helpers.wraps
 def delete_category(session: helpers.extend.session, user: hug.directives.user, response, id: int):
     """Deletes a category"""
-    return queries.with_editor_role(helpers.delete("category", session, queries.user_category(session, user, id)))
+    return helpers.delete("category", session, queries.with_editor_role(queries.user_category(session, user, id)))
 
 @hug.get('', requires=helpers.authentication.is_authenticated)
 @helpers.wraps

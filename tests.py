@@ -1,3 +1,4 @@
+#!python
 import os
 os.environ["MASTOK_CONFIG_FILE"] = "test.ini"
 
@@ -40,12 +41,6 @@ def debug(txt):
 def debug_response(response):
     debug(json.dumps(response.data, indent=4, sort_keys=True))
 
-def get(account, model, id):
-    u = url_and_param(model, id)
-    response = hug.test.get(mastok, u["url"], params=u["params"], headers=headers(account))
-    debug("Response:")
-    debug_response(response)
-    return response.data
 
 def test_value(account, model, id, field, value):
     print("Testing %s[%s].%s = %s" % (model, id, field, value))
@@ -58,7 +53,7 @@ def test(autoroute=False):
             if autoroute:
                 model = args[2]
                 id = args[3]
-                u = url_and_param(model, id)
+                u = url_and_param(model, id, kwargs.get("extra_url"))
                 kwargs["url"] = u["url"]
                 kwargs["params"] = u["params"]
 
@@ -73,15 +68,23 @@ def test(autoroute=False):
         return wrapper
     return decorator
 
-def url_and_param(model, id):
+def url_and_param(model, id, extra_url=None):
     if type(id)==int:
         url = '/%s/%s' % (model, id)
         params=None
     else:
         url = '/%s' % model
         params = id
+    if extra_url:
+        url = '%s%s'% (url, extra_url)
     return { "url": url, "params": params}
-       
+
+def get(account, model, id, extra_url=None):
+    u = url_and_param(model, id, extra_url)
+    response = hug.test.get(mastok, u["url"], params=u["params"], headers=headers(account))
+    debug("Response:")
+    debug_response(response)
+    return response.data       
 
 @test()
 def create_user(expect, mail):
@@ -112,7 +115,7 @@ def delete(expect, account, model, id, url=None, params=None):
     return hug.test.delete(mastok, url, params=params, headers=headers(account))
 
 @test(autoroute=True)
-def update(expect, account, model, id, payload, url=None, params=None):
+def update(expect, account, model, id, payload, url=None, params=None, extra_url=None):
     return hug.test.put(mastok, url, payload, params=params, headers=headers(account))
 
 
@@ -176,6 +179,11 @@ def tests_mastok():
     warehouse12 = create(falcon.HTTP_200, user1, "warehouses", { "name": 'My second warehouse'})
     warehouse21 = create(falcon.HTTP_200, user2, "warehouses", { "name": 'My first warehouse (2)'})
     warehouse22 = create(falcon.HTTP_200, user2, "warehouses", { "name": 'My second warehouse (2)'})
+
+    # warehouse settings
+    update(falcon.HTTP_200, user1, "warehouses", warehouse11["id"], {"my_setting": True}, extra_url="/settings")
+    settings = get(user1, "warehouses", warehouse11["id"], extra_url="/settings")
+    assert(settings=={"my_setting": True})
 
     test_list_update_delete(user2, user1, "warehouses", 2, warehouse22["id"], {"name":'This was My second warehouse (2)'})
     
@@ -245,11 +253,11 @@ def tests_mastok():
     article21 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":30, "expiry": expiry})
     article22 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference212["id"], "quantity":40, "expiry": expiry})
     article23 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location212["id"], "reference_id": reference212["id"], "quantity":50, "expiry": expiry})
-    create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
+    article24 = create(falcon.HTTP_200, user2, "articles", { "warehouse_id": warehouse21["id"], "location_id": location211["id"], "reference_id": reference211["id"], "quantity":35, "expiry": expiry}) # duplicate location and reference
 
-    test_list_update_delete(user2, user1, "articles", 1, article23["id"],
+    test_list_update_delete(user2, user1, "articles", 4, article23["id"],
         {"location_id": location212["id"], "quantity":7, "expiry": "2022-12-15", "tags": [tag213]},
-        {"location_id": location212["id"]})
+        {"warehouse_id": warehouse21["id"]})
     
 
 tests_mastok()
