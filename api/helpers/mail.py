@@ -25,7 +25,7 @@ Subject: {mail_subject}\r\n\
 
 def from_template(mail_to, name, subject_params={}, body_params={}, test=False):
     """Send Creates an account"""
-    mail_from = config.get("smtp", "from")
+    mail_from = config.get("smtp", "from") if not test else ""
     mail_subject = MAIL_TEMPLATES[name]["subject"].format(**subject_params)
     mail_body = MAIL_TEMPLATES[name]["body"].format(**body_params)
     mail_payload = MAIL_PAYLOAD_TEMPLATE.format(
@@ -35,10 +35,10 @@ def from_template(mail_to, name, subject_params={}, body_params={}, test=False):
         mail_body=mail_body)
     
     # Send mail
-    server = smtplib.SMTP_SSL(config.get("smtp", "host"), config.get("smtp", "port"))
-    server.ehlo()
-    server.login(config.get("smtp", "user"), config.get("smtp", "password"))
     if not test:
+        server = smtplib.SMTP_SSL(config.get("smtp", "host"), config.get("smtp", "port"))
+        server.ehlo()
+        server.login(config.get("smtp", "user"), config.get("smtp", "password"))
         server.sendmail(mail_from, mail_to, mail_payload.encode('utf-8'))
-    server.close()
+        server.close()
     
