@@ -70,7 +70,7 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
 
 @hug.post('/{mail}/send_passcode')
 @helpers.wraps
-def send_passcode(session: helpers.extend.session, response, mail, captcha=None, test=False):
+def send_passcode(session: helpers.extend.session, response, mail, captcha=None):
     is_passcode_json = config.get("auth", "passcode_delivery") == "json"
     if not helpers.authentication.check_captcha(captcha):
         return helpers.response.error("captcha_verification_failure", falcon.HTTP_400)
@@ -83,5 +83,5 @@ def send_passcode(session: helpers.extend.session, response, mail, captcha=None,
         print(passcode)
         return {"passcode": passcode}
     else:
-        helpers.mail.from_template(mail, "verify_mail", body_params={"passcode": passcode}, test=test)
+        helpers.mail.from_template(mail, "verify_mail", body_params={"passcode": passcode}, test=is_passcode_json)
         return helpers.response.ok("mail_sent")
