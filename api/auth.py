@@ -71,7 +71,7 @@ def auth_by_mail(session: helpers.extend.session, response, mail, passcode=None,
 @hug.post('/{mail}/send_passcode')
 @helpers.wraps
 def send_passcode(session: helpers.extend.session, response, mail, captcha=None):
-    is_passcode_json = config.get("auth", "passcode_delivery") == "json"
+    is_passcode_json = config.get("authentication", "passcode_delivery") == "json"
     if not helpers.authentication.check_captcha(captcha):
         return helpers.response.error("captcha_verification_failure", falcon.HTTP_400)
     """Send a verification mail """

@@ -42,6 +42,7 @@ def run_migrations_offline():
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    print(url)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -64,6 +65,7 @@ def run_migrations_online():
     url = os.environ.get("MASTOK_SQL_ALCHEMY_URL")
     if url is not None:
         config.set_main_option("sqlalchemy.url", url)
+    print(url)
     
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
@@ -83,5 +85,4 @@ def run_migrations_online():
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    print("a-------------------------")
     run_migrations_online()

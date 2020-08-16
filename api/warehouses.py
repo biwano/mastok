@@ -57,4 +57,5 @@ def get_warehouse_settings(session: helpers.extend.session, user: hug.directives
 @helpers.wraps
 def update_warehouse_settings(session: helpers.extend.session, user: hug.directives.user, response, id: int, body):
     """Gets a warehouse"""
-    return helpers.update("warehouse", session, queries.with_editor_role(queries.user_warehouse(session, user, id)), {"settings": json.dumps(body)})
+    helpers.update("warehouse", session, queries.with_editor_role(queries.user_warehouse(session, user, id)), {"settings": json.dumps(body)})
+    return body
